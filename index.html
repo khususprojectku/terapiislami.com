@@ -1,4 +1,61 @@
-<!-- Hanya bagian script, HTML dan style tetap sama -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Laporan & Kartu Pasien - Bebas Nyeri</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+<style>
+body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
+.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+h2 { text-align:center; }
+input, textarea, select { width:100%; padding:8px; margin:6px 0 12px; border-radius:6px; border:1px solid #ccc; }
+button { padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+.primary { background:#2e86de; color:white; }
+.success { background:#27ae60; color:white; }
+textarea { min-height:90px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.small { font-size:12px; color:#666; }
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Form Konsultasi Terapi Bebas Nyeri</h2>
+
+<label>Nama Pasien</label><input id="nama">
+<label>Umur</label><input id="umur" type="number">
+<label>Jenis Kelamin</label>
+<select id="jk"><option>Laki-laki</option><option>Perempuan</option></select>
+
+<label>Sedang Hamil?</label>
+<select id="hamil"><option>Tidak</option><option>Ya</option></select>
+<label>Jika hamil, berapa bulan?</label><input id="bulanHamil">
+
+<label>Pernah Operasi? Operasi apa?</label><textarea id="operasi"></textarea>
+<label>Keluhan Saat Ini</label><textarea id="keluhan"></textarea>
+<label>Riwayat Penyakit</label><textarea id="penyakit"></textarea>
+
+<h3>Hasil Pemeriksaan</h3>
+<div class="grid2">
+<input id="tensi" placeholder="Tekanan Darah (120/80)">
+<input id="hb" placeholder="HB (g/dL)">
+<input id="gula" placeholder="Gula Darah (mg/dL)">
+<input id="kolesterol" placeholder="Kolesterol (mg/dL)">
+<input id="asamUrat" placeholder="Asam Urat (mg/dL)">
+<input id="bb" placeholder="Berat Badan (kg)">
+<input id="tb" placeholder="Tinggi Badan (cm)">
+</div>
+
+<button class="primary" onclick="buatPrompt()">Buat Prompt AI + Copy</button>
+
+<label>Hasil Saran Terapi</label>
+<textarea id="hasilAI"></textarea>
+
+<button class="success" onclick="buatDanSharePDF()">Buat & Share Laporan PDF + Kartu Pasien</button>
+<p class="small">Terapis: Bpk. Abu Khoir, S.Pd., M.Kom</p>
+</div>
+
 <script>
 function hapusEmoji(teks){ return (teks||"").replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,"").replace(/\s{2,}/g," "); }
 function safeText(v){ return (v||"").toString(); }
@@ -39,6 +96,7 @@ const logoBase64 = await new Promise(res=>{const fr=new FileReader();fr.onload=(
 
 let y=45;
 const pageHeight = doc.internal.pageSize.height;
+
 function header(){ doc.addImage(logoBase64,"PNG",10,8,25,25); doc.setFontSize(14); doc.setFont(undefined,"bold"); doc.text("LAPORAN TERAPI BEBAS NYERI",105,15,null,null,"center"); doc.setFontSize(10); doc.setFont(undefined,"normal"); doc.text("Jln. Cendana no. 3 Kisaran",105,22,null,null,"center"); doc.line(10,35,200,35); y=45; }
 function checkPage(){ if(y>pageHeight-20){doc.addPage();header();} }
 function judul(t){ checkPage(); doc.setFont(undefined,"bold"); doc.setFontSize(12); doc.text(t.toUpperCase(),10,y); y+=8; doc.setFontSize(10);}
@@ -65,7 +123,7 @@ function tabelPemeriksaan(){
  y+=5;
 }
 
-// === Kartu pasien mini ===
+// Kartu pasien mini
 async function kartuMini(){
  doc.addPage(); y=20;
  doc.setFontSize(14); doc.setFont(undefined,"bold"); doc.text("KARTU PASIEN MINI",105,y,null,null,"center"); y+=10;
@@ -112,3 +170,5 @@ if(navigator.canShare && navigator.canShare({files:[file]})){
 }catch(err){ alert("Gagal membuat PDF: "+err.message); console.error(err);}
 }
 </script>
+</body>
+</html>
