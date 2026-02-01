@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -8,13 +9,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-.container { max-width:800px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 h2 { text-align:center; }
 input, textarea, select { width:100%; padding:8px; margin:6px 0 12px; border-radius:6px; border:1px solid #ccc; }
 button { padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
 .primary { background:#2e86de; color:white; }
 .success { background:#27ae60; color:white; }
 textarea { min-height:90px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .small { font-size:12px; color:#666; }
 </style>
 </head>
@@ -22,35 +24,29 @@ textarea { min-height:90px; }
 <div class="container">
 <h2>Form Konsultasi Terapi Bebas Nyeri</h2>
 
-<label>Nama Pasien</label>
-<input id="nama">
-
-<label>Umur</label>
-<input id="umur" type="number">
-
+<label>Nama Pasien</label><input id="nama">
+<label>Umur</label><input id="umur" type="number">
 <label>Jenis Kelamin</label>
-<select id="jk">
-<option>Laki-laki</option>
-<option>Perempuan</option>
-</select>
+<select id="jk"><option>Laki-laki</option><option>Perempuan</option></select>
 
 <label>Sedang Hamil?</label>
 <select id="hamil"><option>Tidak</option><option>Ya</option></select>
+<label>Jika hamil, berapa bulan?</label><input id="bulanHamil">
 
-<label>Jika hamil, berapa bulan?</label>
-<input id="bulanHamil">
+<label>Pernah Operasi? Operasi apa?</label><textarea id="operasi"></textarea>
+<label>Keluhan Saat Ini</label><textarea id="keluhan"></textarea>
+<label>Riwayat Penyakit</label><textarea id="penyakit"></textarea>
 
-<label>Pernah Operasi? Operasi apa?</label>
-<textarea id="operasi"></textarea>
-
-<label>Keluhan Saat Ini</label>
-<textarea id="keluhan"></textarea>
-
-<label>Riwayat Penyakit</label>
-<textarea id="penyakit"></textarea>
-
-<label>Hasil Rekam Medis (HB, tensi, dll)</label>
-<textarea id="medis"></textarea>
+<h3>Hasil Pemeriksaan</h3>
+<div class="grid2">
+<input id="tensi" placeholder="Tekanan Darah (120/80)">
+<input id="hb" placeholder="HB (g/dL)">
+<input id="gula" placeholder="Gula Darah (mg/dL)">
+<input id="kolesterol" placeholder="Kolesterol (mg/dL)">
+<input id="asamUrat" placeholder="Asam Urat (mg/dL)">
+<input id="bb" placeholder="Berat Badan (kg)">
+<input id="tb" placeholder="Tinggi Badan (cm)">
+</div>
 
 <button class="primary" onclick="buatPrompt()">Buat Prompt AI + Copy</button>
 
@@ -58,7 +54,6 @@ textarea { min-height:90px; }
 <textarea id="hasilAI"></textarea>
 
 <button class="success" onclick="buatDanSharePDF()">Buat & Share Laporan PDF Pasien</button>
-
 <p class="small">Terapis: Bpk. Abu Khoir, S.Pd., M.Kom</p>
 </div>
 
@@ -79,7 +74,15 @@ Bulan Kehamilan: ${bulanHamil.value}
 Riwayat Operasi: ${operasi.value}
 Keluhan: ${keluhan.value}
 Riwayat Penyakit: ${penyakit.value}
-Hasil Rekam Medis: ${medis.value}
+
+Hasil Pemeriksaan:
+Tensi: ${tensi.value}
+HB: ${hb.value}
+Gula Darah: ${gula.value}
+Kolesterol: ${kolesterol.value}
+Asam Urat: ${asamUrat.value}
+Berat Badan: ${bb.value}
+Tinggi Badan: ${tb.value}
 
 Berikan saran terapi & pantangan makan/minum TANPA EMOJI.`;
 
@@ -94,7 +97,6 @@ const doc = new jsPDF();
 const logoUrl = "https://khususprojectku.github.io/terapiislami.com/logo.png";
 const tanggal = new Date().toLocaleDateString("id-ID");
 
-// ambil logo
 const logoBlob = await fetch(logoUrl).then(r=>r.blob());
 const logoBase64 = await new Promise(res=>{
  const fr=new FileReader();
@@ -102,60 +104,103 @@ const logoBase64 = await new Promise(res=>{
  fr.readAsDataURL(logoBlob);
 });
 
+let y=45;
 const pageHeight = doc.internal.pageSize.height;
-let y=20;
 
 function header(){
  doc.addImage(logoBase64,"PNG",10,8,25,25);
- doc.setFontSize(14);
+ doc.setFontSize(14); doc.setFont(undefined,"bold");
  doc.text("LAPORAN TERAPI BEBAS NYERI",105,15,null,null,"center");
- doc.setFontSize(10);
+ doc.setFontSize(10); doc.setFont(undefined,"normal");
  doc.text("Jln. Cendana no. 3 Kisaran",105,22,null,null,"center");
  doc.line(10,35,200,35);
  y=45;
 }
 
-function baris(teks,bold=false){
+function checkPage(){
  if(y>pageHeight-20){doc.addPage();header();}
- doc.setFont(undefined,bold?"bold":"normal");
- doc.text(teks,10,y);
- y+=7;
 }
 
-function paragraf(judul,isi){
- baris(judul,true);
- doc.splitTextToSize(hapusEmoji(isi),180).forEach(t=>baris(t));
- y+=2; doc.line(10,y,200,y); y+=6;
+function judul(t){
+ checkPage();
+ doc.setFont(undefined,"bold"); doc.setFontSize(12);
+ doc.text(t.toUpperCase(),10,y); y+=8;
+ doc.setFontSize(10);
+}
+
+function field(l,v){
+ checkPage();
+ doc.setFont(undefined,"bold"); doc.text(l,10,y); y+=6;
+ doc.setFont(undefined,"normal");
+ doc.splitTextToSize(hapusEmoji(v||"-"),180).forEach(t=>{ checkPage(); doc.text(t,12,y); y+=6; });
+ y+=3;
+}
+
+function tabelPemeriksaan(){
+ judul("TABEL HASIL PEMERIKSAAN");
+
+ const rows = [
+  ["Jenis Pemeriksaan","Hasil"],
+  ["Tekanan Darah",tensi.value],
+  ["Hemoglobin (HB)",hb.value],
+  ["Gula Darah",gula.value],
+  ["Kolesterol",kolesterol.value],
+  ["Asam Urat",asamUrat.value],
+  ["Berat Badan",bb.value+" kg"],
+  ["Tinggi Badan",tb.value+" cm"],
+ ];
+
+ rows.forEach((r,i)=>{
+  checkPage();
+  doc.setFont(undefined,i==0?"bold":"normal");
+  doc.rect(10,y,90,8);
+  doc.rect(100,y,90,8);
+  doc.text(r[0],12,y+6);
+  doc.text(hapusEmoji(r[1]||"-"),102,y+6);
+  y+=8;
+ });
+
+ y+=5;
 }
 
 header();
-baris("Tanggal: "+tanggal);
-baris("Nama: "+hapusEmoji(nama.value));
-baris("Umur: "+umur.value+" tahun");
-baris("Jenis Kelamin: "+jk.value);
-y+=5;
 
-paragraf("STATUS KEHAMILAN",`Sedang Hamil: ${hamil.value}\nBulan: ${bulanHamil.value}`);
-paragraf("RIWAYAT OPERASI",operasi.value);
-paragraf("KELUHAN",keluhan.value);
-paragraf("RIWAYAT PENYAKIT",penyakit.value);
-paragraf("HASIL REKAM MEDIS",medis.value);
-paragraf("SARAN TERAPI & PANTANGAN",hasilAI.value);
+judul("DATA PASIEN");
+field("Nama Pasien",nama.value);
+field("Umur",umur.value+" tahun");
+field("Jenis Kelamin",jk.value);
 
-baris("Catatan: Terapi pendamping, bukan pengganti dokter.");
-y+=10;
-baris("Terapis,"); y+=12;
-baris("Bpk. Abu Khoir, S.Pd., M.Kom",true);
+judul("STATUS KEHAMILAN");
+field("Sedang Hamil",hamil.value);
+field("Bulan Kehamilan",bulanHamil.value);
 
-// ===== QR CODE STABIL =====
+judul("RIWAYAT MEDIS");
+field("Riwayat Operasi",operasi.value);
+field("Riwayat Penyakit",penyakit.value);
+
+tabelPemeriksaan();
+
+judul("KELUHAN PASIEN");
+field("Keluhan",keluhan.value);
+
+judul("SARAN TERAPI & PANTANGAN");
+field("Hasil Saran Terapi",hasilAI.value);
+
+doc.setFont(undefined,"italic");
+doc.text("Catatan: Terapi pendamping dan tidak menggantikan pengobatan dokter.",10,y+10);
+
+doc.setFont(undefined,"normal");
+doc.text("Terapis,",10,y+25);
+doc.setFont(undefined,"bold");
+doc.text("Bpk. Abu Khoir, S.Pd., M.Kom",10,y+35);
+
+// QR
 const qrDataUrl = await QRCode.toDataURL("https://www.bebasnyeri.com");
-const lastPage = doc.getNumberOfPages();
-doc.setPage(lastPage);
 doc.addImage(qrDataUrl,"PNG",150,250,40,40);
 doc.setFontSize(9);
 doc.text("Scan untuk info klinik",150,245);
 
-// nomor halaman
+// Nomor halaman
 const total=doc.getNumberOfPages();
 for(let i=1;i<=total;i++){
  doc.setPage(i);
