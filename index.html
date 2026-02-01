@@ -46,32 +46,20 @@ textarea { min-height:90px; }
 <option>Perempuan</option>
 </select>
 
-<label>Sedang Hamil?</label>
-<select id="hamil">
-<option>Tidak</option>
-<option>Ya</option>
-</select>
-
-<label>Jika Hamil, Berapa Bulan?</label>
-<input type="text" id="bulanHamil">
-
-<label>Riwayat Operasi</label>
-<input type="text" id="operasi">
+<label>Keluhan Saat Ini</label>
+<textarea id="keluhan"></textarea>
 
 <label>Riwayat Penyakit</label>
 <textarea id="penyakit"></textarea>
 
-<label>Hasil Medis (HB, Tensi, Gula, dll)</label>
+<label>Hasil Medis</label>
 <textarea id="medis"></textarea>
 
-<label>Keluhan Saat Ini</label>
-<textarea id="keluhan"></textarea>
-
-<label>Hasil Saran Terapi dari AI (Copy dari Gemini/ChatGPT)</label>
+<label><b>Hasil Saran Terapi dari AI</b></label>
 <textarea id="hasilAI"></textarea>
 
 <button onclick="buatPrompt()">Buat Prompt AI + Copy</button>
-<button onclick="buatLaporanPDF()">Buat Laporan PDF Pasien</button>
+<button onclick="buatDanSharePDF()">Buat Laporan & Share ke WhatsApp</button>
 
 <div class="result-box" id="hasil"></div>
 
@@ -79,98 +67,76 @@ textarea { min-height:90px; }
 function buatPrompt(){
 let prompt = `Anda adalah asisten AI klinik terapi BebasNyeri.
 
-Berikan saran TERAPI pendamping serta pantangan makan/minum.
-
 Data Pasien:
 Nama: ${nama.value}
 Umur: ${umur.value}
-Jenis Kelamin: ${jk.value}
-Sedang Hamil: ${hamil.value}
-Bulan Kehamilan: ${bulanHamil.value}
-Riwayat Operasi: ${operasi.value}
+Keluhan: ${keluhan.value}
 Riwayat Penyakit: ${penyakit.value}
 Hasil Medis: ${medis.value}
-Keluhan: ${keluhan.value}
 
-Berikan jawaban dengan format:
+Berikan:
 1. Ringkasan kondisi
-2. Saran terapi pendamping (BUKAN diagnosis medis)
+2. Saran terapi pendamping
 3. Makanan/minuman yang disarankan
-4. Makanan/minuman yang harus dihindari
+4. Pantangan
 5. Catatan keselamatan terapi`;
 
 hasil.textContent = prompt;
-copyToClipboard(prompt);
-alert("Prompt berhasil dibuat & disalin otomatis!");
+navigator.clipboard.writeText(prompt);
+alert("Prompt berhasil disalin!");
 }
 
-function copyToClipboard(text) {
-if (navigator.clipboard) {
-    navigator.clipboard.writeText(text);
-} else {
-    let textarea = document.createElement("textarea");
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-}
-}
-
-async function buatLaporanPDF() {
+async function buatDanSharePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    const tanggal = new Date().toLocaleDateString("id-ID");
 
-    const today = new Date();
-    const tanggal = today.toLocaleDateString("id-ID");
+    doc.setFontSize(14);
+    doc.text("Laporan Terapi Bebas Nyeri", 105, 15, null, null, "center");
+    doc.setFontSize(10);
+    doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
+    doc.text("Website: https://www.bebasnyeri.com", 105, 26, null, null, "center");
+    doc.line(10, 35, 200, 35);
 
-    const logoUrl = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjmB5waUZPR1ObcznyqdysJ8dTKtlSi6tJ0FjtZE7euRJSauvihJM8JggFGSmCh0NDw_yiCUPeM4psUDIU57DbL66udOJ8a_xYimiEn3onUY-RV4AWpV1DT5R_TwT3_LS7pRWDRkJGzCi2RhyphenhyphenRFDFDwCxZCh_dBYlj0ymUjNkKG7izw57vS_W0fONoDHtJ5/s1536/1000130006.png";
+    doc.setFontSize(11);
+    doc.text("Tanggal: " + tanggal, 10, 42);
+    doc.text("Nama Pasien: " + nama.value, 10, 50);
+    doc.text("Umur: " + umur.value + " tahun", 10, 56);
+    doc.text("Jenis Kelamin: " + jk.value, 10, 62);
 
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = logoUrl;
-
-    img.onload = function () {
-        doc.addImage(img, "PNG", 10, 8, 25, 25);
-
-        doc.setFontSize(14);
-        doc.text("Laporan Terapi Bebas Nyeri", 105, 15, null, null, "center");
-        doc.setFontSize(10);
-        doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
-        doc.text("Website: https://www.bebasnyeri.com", 105, 26, null, null, "center");
-        doc.line(10, 35, 200, 35);
-
-        doc.setFontSize(11);
-        doc.text("Tanggal: " + tanggal, 10, 42);
-        doc.text("Nama Pasien: " + nama.value, 10, 50);
-        doc.text("Umur: " + umur.value + " tahun", 10, 56);
-        doc.text("Jenis Kelamin: " + jk.value, 10, 62);
-
-        let isi = `
-Keluhan Utama:
+    let isi = `
+Keluhan:
 ${keluhan.value}
 
 Riwayat Penyakit:
 ${penyakit.value}
 
-Hasil Pemeriksaan Medis:
+Hasil Medis:
 ${medis.value}
 
 Saran Terapi & Pantangan:
 ${hasilAI.value}
 
 Catatan:
-Terapi ini bersifat pendamping dan tidak menggantikan diagnosis dokter.
+Terapi bersifat pendamping dan tidak menggantikan diagnosis dokter.
 `;
 
-        let lines = doc.splitTextToSize(isi, 180);
-        doc.text(lines, 10, 75);
+    let lines = doc.splitTextToSize(isi, 180);
+    doc.text(lines, 10, 75);
 
-        doc.save("Laporan_Terapi_" + nama.value.replace(/\s/g,'_') + ".pdf");
-    };
+    const pdfBlob = doc.output("blob");
+    const file = new File([pdfBlob], "Laporan_Terapi_" + nama.value + ".pdf", { type: "application/pdf" });
 
-    img.onerror = function(){
-        alert("Gagal memuat logo. Periksa koneksi internet.");
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+            title: "Laporan Terapi Bebas Nyeri",
+            text: "Berikut laporan terapi Anda.",
+            files: [file]
+        });
+    } else {
+        // fallback kalau HP tidak support share file
+        doc.save("Laporan_Terapi_" + nama.value + ".pdf");
+        alert("HP tidak mendukung share langsung. File sudah di-download.");
     }
 }
 </script>
