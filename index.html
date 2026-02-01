@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generator Laporan & Kartu Pasien - Bebas Nyeri</title>
+<title>Laporan Pasien Bebas Nyeri</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
 .container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
@@ -52,7 +51,7 @@ textarea { min-height:90px; }
 <label>Hasil Saran Terapi</label>
 <textarea id="hasilAI"></textarea>
 
-<button class="success" onclick="buatDanSharePDF()">Buat & Share Laporan PDF + Kartu Pasien</button>
+<button class="success" onclick="buatDanSharePDF()">Buat & Share Laporan PDF</button>
 <p class="small">Terapis: Bpk. Abu Khoir, S.Pd., M.Kom</p>
 </div>
 
@@ -84,88 +83,97 @@ navigator.clipboard.writeText(prompt);
 alert("Prompt berhasil disalin");
 }
 
-async function buatDanSharePDF(){
+function buatDanSharePDF(){
 try{
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF();
 const logoUrl = "https://khususprojectku.github.io/terapiislami.com/logo.png";
 const tanggal = new Date().toLocaleDateString("id-ID");
 
-const logoBlob = await fetch(logoUrl).then(r=>r.blob());
-const logoBase64 = await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(logoBlob);});
+// ambil logo sebagai base64
+fetch(logoUrl).then(r=>r.blob()).then(logoBlob=>{
+ const fr=new FileReader();
+ fr.onload=()=>{
+   const logoBase64 = fr.result;
+   let y=45;
+   const pageHeight = doc.internal.pageSize.height;
 
-let y=45;
-const pageHeight = doc.internal.pageSize.height;
+   function header(){ 
+     doc.addImage(logoBase64,"PNG",10,8,25,25); 
+     doc.setFontSize(14); doc.setFont(undefined,"bold"); 
+     doc.text("LAPORAN TERAPI BEBAS NYERI",105,15,null,null,"center"); 
+     doc.setFontSize(10); doc.setFont(undefined,"normal"); 
+     doc.text("Jln. Cendana no. 3 Kisaran",105,22,null,null,"center"); 
+     doc.line(10,35,200,35); 
+     y=45; 
+   }
+   function checkPage(){ if(y>pageHeight-20){doc.addPage();header();} }
+   function judul(t){ checkPage(); doc.setFont(undefined,"bold"); doc.setFontSize(12); doc.text(t.toUpperCase(),10,y); y+=8; doc.setFontSize(10);}
+   function field(l,v){ 
+     checkPage(); 
+     doc.setFont(undefined,"bold"); doc.text(l,10,y); 
+     y+=6; 
+     doc.setFont(undefined,"normal"); 
+     const lines = doc.splitTextToSize(hapusEmoji(safeText(v)),180);
+     lines.forEach(line=>{checkPage(); doc.text(line,12,y); y+=6}); 
+     y+=3;
+   }
 
-function header(){ doc.addImage(logoBase64,"PNG",10,8,25,25); doc.setFontSize(14); doc.setFont(undefined,"bold"); doc.text("LAPORAN TERAPI BEBAS NYERI",105,15,null,null,"center"); doc.setFontSize(10); doc.setFont(undefined,"normal"); doc.text("Jln. Cendana no. 3 Kisaran",105,22,null,null,"center"); doc.line(10,35,200,35); y=45; }
-function checkPage(){ if(y>pageHeight-20){doc.addPage();header();} }
-function judul(t){ checkPage(); doc.setFont(undefined,"bold"); doc.setFontSize(12); doc.text(t.toUpperCase(),10,y); y+=8; doc.setFontSize(10);}
-function field(l,v){ checkPage(); doc.setFont(undefined,"bold"); doc.text(l,10,y); y+=6; doc.setFont(undefined,"normal"); doc.splitTextToSize(hapusEmoji(safeText(v)),180).forEach(t=>{checkPage(); doc.text(t,12,y); y+=6}); y+=3;}
+   function tabelPemeriksaan(){
+     judul("TABEL HASIL PEMERIKSAAN");
+     const rows = [
+       ["Jenis Pemeriksaan","Hasil"],
+       ["Tekanan Darah",safeText(tensi.value)],
+       ["Hemoglobin (HB)",safeText(hb.value)],
+       ["Gula Darah",safeText(gula.value)],
+       ["Kolesterol",safeText(kolesterol.value)],
+       ["Asam Urat",safeText(asamUrat.value)],
+       ["Berat Badan",safeText(bb.value)+" kg"],
+       ["Tinggi Badan",safeText(tb.value)+" cm"]
+     ];
+     const rowHeight = 8;
+     rows.forEach((r,i)=>{
+       checkPage();
+       doc.setFont(undefined,i==0?"bold":"normal");
+       doc.rect(10,y,90,rowHeight); doc.rect(100,y,90,rowHeight);
+       const cellPadding = 2;
+       doc.text(r[0],12,y+rowHeight-2); 
+       doc.text(r[1],102,y+rowHeight-2); 
+       y+=rowHeight;
+     });
+     y+=5;
+   }
 
-function tabelPemeriksaan(){
- judul("TABEL HASIL PEMERIKSAAN");
- const rows = [
-  ["Jenis Pemeriksaan","Hasil"],
-  ["Tekanan Darah",safeText(tensi.value)],
-  ["Hemoglobin (HB)",safeText(hb.value)],
-  ["Gula Darah",safeText(gula.value)],
-  ["Kolesterol",safeText(kolesterol.value)],
-  ["Asam Urat",safeText(asamUrat.value)],
-  ["Berat Badan",safeText(bb.value)+" kg"],
-  ["Tinggi Badan",safeText(tb.value)+" cm"]
- ];
- rows.forEach((r,i)=>{
-  checkPage();
-  doc.setFont(undefined,i==0?"bold":"normal");
-  doc.rect(10,y,90,8); doc.rect(100,y,90,8);
-  doc.text(r[0],12,y+6); doc.text(r[1],102,y+6); y+=8;
- });
- y+=5;
-}
+   header();
+   judul("DATA PASIEN");
+   field("Nama Pasien",nama.value);
+   field("Umur",safeText(umur.value)+" tahun");
+   field("Jenis Kelamin",safeText(jk.value));
+   judul("STATUS KEHAMILAN");
+   field("Sedang Hamil",safeText(hamil.value));
+   field("Bulan Kehamilan",safeText(bulanHamil.value));
+   judul("RIWAYAT MEDIS");
+   field("Riwayat Operasi",safeText(operasi.value));
+   field("Riwayat Penyakit",safeText(penyakit.value));
+   tabelPemeriksaan();
+   judul("KELUHAN PASIEN"); field("Keluhan",safeText(keluhan.value));
+   judul("SARAN TERAPI & PANTANGAN"); field("Hasil Saran Terapi",safeText(hasilAI.value));
+   doc.setFont(undefined,"italic"); doc.text("Catatan: Terapi pendamping dan tidak menggantikan pengobatan dokter.",10,y+10);
+   doc.setFont(undefined,"normal"); doc.text("Terapis,",10,y+25);
+   doc.setFont(undefined,"bold"); doc.text("Bpk. Abu Khoir, S.Pd., M.Kom",10,y+35);
 
-// Kartu pasien mini
-async function kartuMini(){
- doc.addPage(); y=20;
- doc.setFontSize(14); doc.setFont(undefined,"bold"); doc.text("KARTU PASIEN MINI",105,y,null,null,"center"); y+=10;
- doc.addImage(logoBase64,"PNG",10,y,25,25);
- field("Nama",safeText(nama.value));
- field("Umur",safeText(umur.value)+" tahun");
- field("Jenis Kelamin",safeText(jk.value));
- field("Tanggal Laporan",tanggal);
- const qrDataUrl = await QRCode.toDataURL("https://www.bebasnyeri.com",{width:100,height:100});
- doc.addImage(qrDataUrl,"PNG",150,30,40,40);
- y+=50;
-}
+   // Nomor halaman
+   const total=doc.getNumberOfPages();
+   for(let i=1;i<=total;i++){ doc.setPage(i); doc.setFontSize(10); doc.text("Halaman "+i+" dari "+total,105,290,null,null,"center"); }
 
-header();
-judul("DATA PASIEN");
-field("Nama Pasien",nama.value);
-field("Umur",safeText(umur.value)+" tahun");
-field("Jenis Kelamin",safeText(jk.value));
-judul("STATUS KEHAMILAN");
-field("Sedang Hamil",safeText(hamil.value));
-field("Bulan Kehamilan",safeText(bulanHamil.value));
-judul("RIWAYAT MEDIS");
-field("Riwayat Operasi",safeText(operasi.value));
-field("Riwayat Penyakit",safeText(penyakit.value));
-tabelPemeriksaan();
-judul("KELUHAN PASIEN"); field("Keluhan",safeText(keluhan.value));
-judul("SARAN TERAPI & PANTANGAN"); field("Hasil Saran Terapi",safeText(hasilAI.value));
-doc.setFont(undefined,"italic"); doc.text("Catatan: Terapi pendamping dan tidak menggantikan pengobatan dokter.",10,y+10);
-doc.setFont(undefined,"normal"); doc.text("Terapis,",10,y+25);
-doc.setFont(undefined,"bold"); doc.text("Bpk. Abu Khoir, S.Pd., M.Kom",10,y+35);
-
-await kartuMini(); // tunggu QR code selesai
-
-// Nomor halaman
-const total=doc.getNumberOfPages();
-for(let i=1;i<=total;i++){ doc.setPage(i); doc.setFontSize(10); doc.text("Halaman "+i+" dari "+total,105,290,null,null,"center"); }
-
-const blob=doc.output("blob");
-const file=new File([blob],"Laporan_Terapi_"+safeText(nama.value)+".pdf",{type:"application/pdf"});
-if(navigator.canShare && navigator.canShare({files:[file]})){
- await navigator.share({files:[file],title:"Laporan & Kartu Pasien"});
-}else{ doc.save("Laporan_Terapi_"+safeText(nama.value)+".pdf"); }
+   const blob=doc.output("blob");
+   const file=new File([blob],"Laporan_Terapi_"+safeText(nama.value)+".pdf",{type:"application/pdf"});
+   if(navigator.canShare && navigator.canShare({files:[file]})){
+     navigator.share({files:[file],title:"Laporan Pasien"});
+   }else{ doc.save("Laporan_Terapi_"+safeText(nama.value)+".pdf"); }
+ };
+ fr.readAsDataURL(logoBlob);
+});
 
 }catch(err){ alert("Gagal membuat PDF: "+err.message); console.error(err);}
 }
