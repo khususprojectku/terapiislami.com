@@ -27,6 +27,8 @@ textarea { min-height:90px; }
     white-space:pre-wrap;
 }
 </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -65,22 +67,21 @@ textarea { min-height:90px; }
 <label>Keluhan Saat Ini</label>
 <textarea id="keluhan"></textarea>
 
-<button onclick="buatPrompt()">Buat Prompt AI + Copy Otomatis</button>
+<label>Hasil Saran Terapi dari AI (Copy dari Gemini/ChatGPT)</label>
+<textarea id="hasilAI"></textarea>
+
+<button onclick="buatPrompt()">Buat Prompt AI + Copy</button>
+<button onclick="buatLaporanPDF()">Buat Laporan PDF Pasien</button>
 
 <div class="result-box" id="hasil"></div>
 
 <script>
 function buatPrompt(){
-let prompt = `Anda adalah asisten AI klinik terapi BEBAS NYERI.
+let prompt = `Anda adalah asisten AI klinik terapi BebasNyeri.
 
-Tugas Anda:
-1. Analisis kondisi pasien berdasarkan data
-2. Berikan saran terapi pendamping (BUKAN diagnosis medis)
-3. Berikan pantangan dan anjuran makanan/minuman
-4. Gunakan bahasa yang mudah dipahami pasien
-5. Tambahkan catatan keselamatan terapi
+Berikan saran TERAPI pendamping serta pantangan makan/minum.
 
-=== DATA PASIEN ===
+Data Pasien:
 Nama: ${nama.value}
 Umur: ${umur.value}
 Jenis Kelamin: ${jk.value}
@@ -89,40 +90,18 @@ Bulan Kehamilan: ${bulanHamil.value}
 Riwayat Operasi: ${operasi.value}
 Riwayat Penyakit: ${penyakit.value}
 Hasil Medis: ${medis.value}
-Keluhan Saat Ini: ${keluhan.value}
+Keluhan: ${keluhan.value}
 
-=== FORMAT JAWABAN UNTUK TERAPIS ===
-1. Ringkasan kondisi pasien
-2. Saran terapi pendamping
+Berikan jawaban dengan format:
+1. Ringkasan kondisi
+2. Saran terapi pendamping (BUKAN diagnosis medis)
 3. Makanan/minuman yang disarankan
 4. Makanan/minuman yang harus dihindari
-5. Catatan penting & peringatan
-
-=== TAMBAHAN: BUATKAN LAPORAN UNTUK PASIEN ===
-Setelah jawaban untuk terapis, buatkan versi laporan yang ramah pasien dengan format siap dijadikan PDF dengan struktur berikut:
-
-HEADER (di bagian paling atas):
-[Lampirkan logo dari link ini]
-https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjmB5waUZPR1ObcznyqdysJ8dTKtlSi6tJ0FjtZE7euRJSauvihJM8JggFGSmCh0NDw_yiCUPeM4psUDIU57DbL66udOJ8a_xYimiEn3onUY-RV4AWpV1DT5R_TwT3_LS7pRWDRkJGzCi2RhyphenhyphenRFDFDwCxZCh_dBYlj0ymUjNkKG7izw57vS_W0fONoDHtJ5/s1536/1000130006.png
-
-Laporan Terapi Bebas Nyeri  
-Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan  
-Website: https://www.bebasnyeri.com
-
-ISI LAPORAN UNTUK PASIEN:
-- Sapaan hangat untuk pasien
-- Penjelasan singkat kondisi (bahasa awam)
-- Saran terapi pendamping
-- Anjuran makanan & minuman
-- Pantangan makanan & minuman
-- Catatan keselamatan
-- Penutup yang menenangkan dan memotivasi
-
-Gunakan bahasa yang lembut, tidak menakut-nakuti, dan mudah dipahami orang awam.`;
+5. Catatan keselamatan terapi`;
 
 hasil.textContent = prompt;
 copyToClipboard(prompt);
-alert("Prompt berhasil dibuat & langsung disalin ke clipboard!");
+alert("Prompt berhasil dibuat & disalin otomatis!");
 }
 
 function copyToClipboard(text) {
@@ -136,6 +115,63 @@ if (navigator.clipboard) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
 }
+}
+
+async function buatLaporanPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const today = new Date();
+    const tanggal = today.toLocaleDateString("id-ID");
+
+    const logoUrl = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjmB5waUZPR1ObcznyqdysJ8dTKtlSi6tJ0FjtZE7euRJSauvihJM8JggFGSmCh0NDw_yiCUPeM4psUDIU57DbL66udOJ8a_xYimiEn3onUY-RV4AWpV1DT5R_TwT3_LS7pRWDRkJGzCi2RhyphenhyphenRFDFDwCxZCh_dBYlj0ymUjNkKG7izw57vS_W0fONoDHtJ5/s1536/1000130006.png";
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = logoUrl;
+
+    img.onload = function () {
+        doc.addImage(img, "PNG", 10, 8, 25, 25);
+
+        doc.setFontSize(14);
+        doc.text("Laporan Terapi Bebas Nyeri", 105, 15, null, null, "center");
+        doc.setFontSize(10);
+        doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
+        doc.text("Website: https://www.bebasnyeri.com", 105, 26, null, null, "center");
+        doc.line(10, 35, 200, 35);
+
+        doc.setFontSize(11);
+        doc.text("Tanggal: " + tanggal, 10, 42);
+        doc.text("Nama Pasien: " + nama.value, 10, 50);
+        doc.text("Umur: " + umur.value + " tahun", 10, 56);
+        doc.text("Jenis Kelamin: " + jk.value, 10, 62);
+
+        let isi = `
+Keluhan Utama:
+${keluhan.value}
+
+Riwayat Penyakit:
+${penyakit.value}
+
+Hasil Pemeriksaan Medis:
+${medis.value}
+
+Saran Terapi & Pantangan:
+${hasilAI.value}
+
+Catatan:
+Terapi ini bersifat pendamping dan tidak menggantikan diagnosis dokter.
+`;
+
+        let lines = doc.splitTextToSize(isi, 180);
+        doc.text(lines, 10, 75);
+
+        doc.save("Laporan_Terapi_" + nama.value.replace(/\s/g,'_') + ".pdf");
+    };
+
+    img.onerror = function(){
+        alert("Gagal memuat logo. Periksa koneksi internet.");
+    }
 }
 </script>
 
