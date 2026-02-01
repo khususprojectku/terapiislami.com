@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generator Prompt Terapi - Bebas Nyeri</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
 .container { max-width:800px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
@@ -56,18 +57,24 @@ textarea { min-height:90px; }
 
 <button class="primary" onclick="buatPrompt()">Buat Prompt AI + Copy</button>
 
-<label>Hasil Saran Terapi dari AI</label>
-<textarea id="hasilAI" placeholder="Paste jawaban AI di sini..."></textarea>
+<label>Hasil Saran Terapi</label>
+<textarea id="hasilAI" placeholder="Paste hasil saran terapi di sini..."></textarea>
 
 <button class="success" onclick="buatDanSharePDF()">Buat & Share Laporan PDF Pasien</button>
 
 <p class="small">Terapis: Bpk. Abu Khoir, S.Pd., M.Kom</p>
 </div>
 
+<div id="qrcode" style="display:none;"></div>
+
 <script>
+function hapusEmoji(teks) {
+    return teks.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "").replace(/\s{2,}/g," ");
+}
+
 function buatPrompt() {
 const prompt = `
-Anda adalah asisten AI untuk klinik terapi BebasNyeri.com.
+Anda adalah asisten untuk klinik terapi BebasNyeri.com.
 
 Data Pasien:
 Nama: ${nama.value}
@@ -82,11 +89,10 @@ Hasil Rekam Medis: ${medis.value}
 
 Tugas Anda:
 Berikan saran terapi alami dan pantangan makan/minum yang aman.
-Gunakan bahasa sederhana.
+Gunakan bahasa sederhana TANPA EMOJI.
 `;
-
 navigator.clipboard.writeText(prompt);
-alert("Prompt berhasil disalin. Tinggal paste ke Gemini/AI.");
+alert("Prompt berhasil disalin.");
 }
 
 async function buatDanSharePDF() {
@@ -101,80 +107,97 @@ const reader = new FileReader();
 
 reader.onloadend = async function () {
 const logoBase64 = reader.result;
+const pageHeight = doc.internal.pageSize.height;
+const margin = 15;
 
-// HEADER
-doc.addImage(logoBase64, "PNG", 10, 8, 25, 25);
-doc.setFontSize(14);
-doc.text("Laporan Terapi Bebas Nyeri", 105, 15, null, null, "center");
-doc.setFontSize(10);
-doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
-doc.text("Website: https://www.bebasnyeri.com", 105, 26, null, null, "center");
-doc.line(10, 35, 200, 35);
+function gambarHeader() {
+    doc.addImage(logoBase64, "PNG", 10, 8, 25, 25);
+    doc.setFontSize(14);
+    doc.text("LAPORAN TERAPI BEBAS NYERI", 105, 15, null, null, "center");
+    doc.setFontSize(10);
+    doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
+    doc.text("Website: www.bebasnyeri.com", 105, 26, null, null, "center");
+    doc.line(10, 35, 200, 35);
+}
+
+gambarHeader();
 
 doc.setFontSize(11);
 doc.text("Tanggal: " + tanggal, 10, 42);
-doc.text("Nama Pasien: " + nama.value, 10, 50);
+doc.text("Nama Pasien: " + hapusEmoji(nama.value), 10, 50);
 doc.text("Umur: " + umur.value + " tahun", 10, 56);
 doc.text("Jenis Kelamin: " + jk.value, 10, 62);
 
-let isi = `
-Sedang Hamil: ${hamil.value}
-Bulan Kehamilan: ${bulanHamil.value}
+let y = 72;
 
-Riwayat Operasi:
-${operasi.value}
-
-Keluhan:
-${keluhan.value}
-
-Riwayat Penyakit:
-${penyakit.value}
-
-Hasil Rekam Medis:
-${medis.value}
-
-Saran Terapi & Pantangan dari AI:
-${hasilAI.value}
-
-Catatan:
-Terapi bersifat pendamping dan tidak menggantikan diagnosis dokter.
-`;
-
-let y = 75;
-const pageHeight = doc.internal.pageSize.height;
-const margin = 15;
-const lines = doc.splitTextToSize(isi, 180);
-
-lines.forEach(line => {
-if (y > pageHeight - margin) {
-doc.addPage();
-y = 20;
+function tambahBaris(teks, bold=false){
+    if (y > pageHeight - margin) {
+        doc.addPage();
+        gambarHeader();
+        y = 45;
+    }
+    doc.setFont(undefined, bold ? "bold" : "normal");
+    doc.text(teks, 10, y);
+    y += 7;
 }
-doc.text(line, 10, y);
-y += 7;
+
+function tambahParagraf(judul, isi){
+    tambahBaris(judul, true);
+    const lines = doc.splitTextToSize(hapusEmoji(isi), 180);
+    lines.forEach(line => tambahBaris(line));
+    y += 2;
+    doc.line(10, y, 200, y);
+    y += 6;
+}
+
+tambahParagraf("STATUS KEHAMILAN", `Sedang Hamil: ${hamil.value}\nBulan Kehamilan: ${bulanHamil.value}`);
+tambahParagraf("RIWAYAT OPERASI", operasi.value);
+tambahParagraf("KELUHAN PASIEN", keluhan.value);
+tambahParagraf("RIWAYAT PENYAKIT", penyakit.value);
+tambahParagraf("HASIL REKAM MEDIS", medis.value);
+tambahParagraf("SARAN TERAPI & PANTANGAN", hasilAI.value);
+
+tambahBaris("Catatan: Terapi bersifat pendamping dan tidak menggantikan diagnosis dokter.");
+y += 15;
+tambahBaris("Terapis,");
+y += 15;
+tambahBaris("Bpk. Abu Khoir, S.Pd., M.Kom", true);
+
+// ===== QR CODE DI HALAMAN TERAKHIR =====
+const qrDiv = document.getElementById("qrcode");
+qrDiv.innerHTML = "";
+new QRCode(qrDiv, {
+    text: "https://www.bebasnyeri.com",
+    width: 100,
+    height: 100
 });
 
-// NOMOR HALAMAN
-const pageCount = doc.getNumberOfPages();
-for (let i = 1; i <= pageCount; i++) {
-doc.setPage(i);
-doc.setFontSize(10);
-doc.text("Halaman " + i + " dari " + pageCount, 105, 290, null, null, "center");
-}
+setTimeout(() => {
+    const qrImg = qrDiv.querySelector("img").src;
+    const totalPages = doc.getNumberOfPages();
+    doc.setPage(totalPages);
+    doc.addImage(qrImg, "PNG", 150, 250, 40, 40);
+    doc.setFontSize(9);
+    doc.text("Scan untuk verifikasi laporan", 150, 245);
 
-const pdfBlob = doc.output("blob");
-const file = new File([pdfBlob], "Laporan_Terapi_" + nama.value + ".pdf", { type: "application/pdf" });
+    // NOMOR HALAMAN
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text("Halaman " + i + " dari " + totalPages, 105, 290, null, null, "center");
+    }
 
-if (navigator.canShare && navigator.canShare({ files: [file] })) {
-await navigator.share({
-title: "Laporan Terapi Bebas Nyeri",
-text: "Berikut laporan terapi Anda.",
-files: [file]
-});
-} else {
-doc.save("Laporan_Terapi_" + nama.value + ".pdf");
-alert("File di-download karena HP tidak mendukung share langsung.");
-}
+    const pdfBlob = doc.output("blob");
+    const file = new File([pdfBlob], "Laporan_Terapi_" + nama.value + ".pdf", { type: "application/pdf" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ title: "Laporan Terapi", files: [file] });
+    } else {
+        doc.save("Laporan_Terapi_" + nama.value + ".pdf");
+        alert("File di-download karena perangkat tidak mendukung share langsung.");
+    }
+}, 500);
+
 };
 
 reader.readAsDataURL(blob);
