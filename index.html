@@ -27,8 +27,6 @@ textarea { min-height:90px; }
     white-space:pre-wrap;
 }
 </style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -67,18 +65,22 @@ textarea { min-height:90px; }
 <label>Keluhan Saat Ini</label>
 <textarea id="keluhan"></textarea>
 
-<button onclick="buatPrompt()">Buat Prompt AI + Copy</button>
-<button onclick="downloadPDF()">Download PDF</button>
+<button onclick="buatPrompt()">Buat Prompt AI + Copy Otomatis</button>
 
 <div class="result-box" id="hasil"></div>
 
 <script>
 function buatPrompt(){
-let prompt = `Anda adalah asisten AI klinik terapi BebasNyeri.
+let prompt = `Anda adalah asisten AI klinik terapi BEBAS NYERI.
 
-Berikan saran TERAPI pendamping serta pantangan makan/minum.
+Tugas Anda:
+1. Analisis kondisi pasien berdasarkan data
+2. Berikan saran terapi pendamping (BUKAN diagnosis medis)
+3. Berikan pantangan dan anjuran makanan/minuman
+4. Gunakan bahasa yang mudah dipahami pasien
+5. Tambahkan catatan keselamatan terapi
 
-Data Pasien:
+=== DATA PASIEN ===
 Nama: ${nama.value}
 Umur: ${umur.value}
 Jenis Kelamin: ${jk.value}
@@ -87,19 +89,40 @@ Bulan Kehamilan: ${bulanHamil.value}
 Riwayat Operasi: ${operasi.value}
 Riwayat Penyakit: ${penyakit.value}
 Hasil Medis: ${medis.value}
-Keluhan: ${keluhan.value}
+Keluhan Saat Ini: ${keluhan.value}
 
-Berikan jawaban dengan format:
-1. Ringkasan kondisi
-2. Saran terapi pendamping (BUKAN diagnosis medis)
+=== FORMAT JAWABAN UNTUK TERAPIS ===
+1. Ringkasan kondisi pasien
+2. Saran terapi pendamping
 3. Makanan/minuman yang disarankan
 4. Makanan/minuman yang harus dihindari
-5. Catatan keselamatan terapi`;
+5. Catatan penting & peringatan
+
+=== TAMBAHAN: BUATKAN LAPORAN UNTUK PASIEN ===
+Setelah jawaban untuk terapis, buatkan versi laporan yang ramah pasien dengan format siap dijadikan PDF dengan struktur berikut:
+
+HEADER (di bagian paling atas):
+[Lampirkan logo dari link ini]
+https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjmB5waUZPR1ObcznyqdysJ8dTKtlSi6tJ0FjtZE7euRJSauvihJM8JggFGSmCh0NDw_yiCUPeM4psUDIU57DbL66udOJ8a_xYimiEn3onUY-RV4AWpV1DT5R_TwT3_LS7pRWDRkJGzCi2RhyphenhyphenRFDFDwCxZCh_dBYlj0ymUjNkKG7izw57vS_W0fONoDHtJ5/s1536/1000130006.png
+
+Laporan Terapi Bebas Nyeri  
+Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan  
+Website: https://www.bebasnyeri.com
+
+ISI LAPORAN UNTUK PASIEN:
+- Sapaan hangat untuk pasien
+- Penjelasan singkat kondisi (bahasa awam)
+- Saran terapi pendamping
+- Anjuran makanan & minuman
+- Pantangan makanan & minuman
+- Catatan keselamatan
+- Penutup yang menenangkan dan memotivasi
+
+Gunakan bahasa yang lembut, tidak menakut-nakuti, dan mudah dipahami orang awam.`;
 
 hasil.textContent = prompt;
-
 copyToClipboard(prompt);
-alert("Prompt berhasil dibuat & disalin otomatis!");
+alert("Prompt berhasil dibuat & langsung disalin ke clipboard!");
 }
 
 function copyToClipboard(text) {
@@ -113,48 +136,6 @@ if (navigator.clipboard) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
 }
-}
-
-function downloadPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    const today = new Date();
-    const tanggal = today.toLocaleDateString("id-ID");
-
-    const noPasien = "BN-" + today.getFullYear().toString().slice(-2) +
-                     (today.getMonth()+1).toString().padStart(2,'0') +
-                     today.getDate().toString().padStart(2,'0') + "-" +
-                     today.getHours().toString().padStart(2,'0') +
-                     today.getMinutes().toString().padStart(2,'0');
-
-    // Header teks
-    doc.setFontSize(14);
-    doc.text("LEMBAR KONSULTASI TERAPI", 105, 15, null, null, "center");
-    doc.setFontSize(10);
-    doc.text("BebasNyeri.com", 105, 22, null, null, "center");
-    doc.text("Terapis: Bpk. Abu Khoir, S.Pd., M.Kom.", 105, 28, null, null, "center");
-    doc.line(10, 32, 200, 32);
-
-    doc.text("Tanggal: " + tanggal, 10, 38);
-    doc.text("No. Rekam Pasien: " + noPasien, 140, 38);
-
-    let text = hasil.textContent || "Prompt belum dibuat.";
-    let lines = doc.splitTextToSize(text, 180);
-    doc.text(lines, 10, 45);
-
-    doc.save("Konsultasi_BebasNyeri_" + noPasien + ".pdf");
-}
-
-/* PWA */
-if ('serviceWorker' in navigator) {
-  const swCode = `
-    self.addEventListener('install', e => self.skipWaiting());
-    self.addEventListener('fetch', e => {});
-  `;
-  const blob = new Blob([swCode], { type: 'text/javascript' });
-  const swURL = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swURL);
 }
 </script>
 
