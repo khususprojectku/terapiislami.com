@@ -56,7 +56,7 @@ textarea { min-height:90px; }
 <textarea id="medis"></textarea>
 
 <label><b>Hasil Saran Terapi dari AI</b></label>
-<textarea id="hasilAI"></textarea>
+<textarea id="hasilAI" placeholder="Tempel jawaban AI di sini..."></textarea>
 
 <button onclick="buatPrompt()">Buat Prompt AI + Copy</button>
 <button onclick="buatDanSharePDF()">Buat Laporan & Share ke WhatsApp</button>
@@ -91,20 +91,32 @@ async function buatDanSharePDF() {
     const doc = new jsPDF();
     const tanggal = new Date().toLocaleDateString("id-ID");
 
-    doc.setFontSize(14);
-    doc.text("Laporan Terapi Bebas Nyeri", 105, 15, null, null, "center");
-    doc.setFontSize(10);
-    doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
-    doc.text("Website: https://www.bebasnyeri.com", 105, 26, null, null, "center");
-    doc.line(10, 35, 200, 35);
+    const logoUrl = "https://khususprojectku.github.io/terapiislami.com/logo.png";
 
-    doc.setFontSize(11);
-    doc.text("Tanggal: " + tanggal, 10, 42);
-    doc.text("Nama Pasien: " + nama.value, 10, 50);
-    doc.text("Umur: " + umur.value + " tahun", 10, 56);
-    doc.text("Jenis Kelamin: " + jk.value, 10, 62);
+    try {
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
 
-    let isi = `
+        reader.onloadend = async function () {
+            const base64data = reader.result;
+
+            doc.addImage(base64data, "PNG", 10, 8, 25, 25);
+
+            doc.setFontSize(14);
+            doc.text("Laporan Terapi Bebas Nyeri", 105, 15, null, null, "center");
+            doc.setFontSize(10);
+            doc.text("Jln. Cendana no. 3 Kisaran, Samping Bulog/Universitas Asahan.", 105, 21, null, null, "center");
+            doc.text("Website: https://www.bebasnyeri.com", 105, 26, null, null, "center");
+            doc.line(10, 35, 200, 35);
+
+            doc.setFontSize(11);
+            doc.text("Tanggal: " + tanggal, 10, 42);
+            doc.text("Nama Pasien: " + nama.value, 10, 50);
+            doc.text("Umur: " + umur.value + " tahun", 10, 56);
+            doc.text("Jenis Kelamin: " + jk.value, 10, 62);
+
+            let isi = `
 Keluhan:
 ${keluhan.value}
 
@@ -121,22 +133,28 @@ Catatan:
 Terapi bersifat pendamping dan tidak menggantikan diagnosis dokter.
 `;
 
-    let lines = doc.splitTextToSize(isi, 180);
-    doc.text(lines, 10, 75);
+            let lines = doc.splitTextToSize(isi, 180);
+            doc.text(lines, 10, 75);
 
-    const pdfBlob = doc.output("blob");
-    const file = new File([pdfBlob], "Laporan_Terapi_" + nama.value + ".pdf", { type: "application/pdf" });
+            const pdfBlob = doc.output("blob");
+            const file = new File([pdfBlob], "Laporan_Terapi_" + nama.value + ".pdf", { type: "application/pdf" });
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-            title: "Laporan Terapi Bebas Nyeri",
-            text: "Berikut laporan terapi Anda.",
-            files: [file]
-        });
-    } else {
-        // fallback kalau HP tidak support share file
-        doc.save("Laporan_Terapi_" + nama.value + ".pdf");
-        alert("HP tidak mendukung share langsung. File sudah di-download.");
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: "Laporan Terapi Bebas Nyeri",
+                    text: "Berikut laporan terapi Anda.",
+                    files: [file]
+                });
+            } else {
+                doc.save("Laporan_Terapi_" + nama.value + ".pdf");
+                alert("HP tidak mendukung share langsung. File sudah di-download.");
+            }
+        };
+
+        reader.readAsDataURL(blob);
+
+    } catch (error) {
+        alert("Gagal memuat logo. Periksa koneksi internet.");
     }
 }
 </script>
