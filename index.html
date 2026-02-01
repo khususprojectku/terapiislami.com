@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Prompt Terapi BebasNyeri</title>
-
-<!-- PWA Theme -->
 <meta name="theme-color" content="#b30000">
 
 <style>
@@ -30,7 +28,6 @@ textarea { min-height:90px; }
 }
 </style>
 
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -70,7 +67,7 @@ textarea { min-height:90px; }
 <label>Keluhan Saat Ini</label>
 <textarea id="keluhan"></textarea>
 
-<button onclick="buatPrompt()">Buat Prompt AI</button>
+<button onclick="buatPrompt()">Buat Prompt AI + Copy</button>
 <button onclick="downloadPDF()">Download PDF</button>
 
 <div class="result-box" id="hasil"></div>
@@ -100,9 +97,25 @@ Berikan jawaban dengan format:
 5. Catatan keselamatan terapi`;
 
 hasil.textContent = prompt;
+
+copyToClipboard(prompt);
+alert("Prompt berhasil dibuat & disalin otomatis!");
 }
 
-async function downloadPDF() {
+function copyToClipboard(text) {
+if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+} else {
+    let textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+}
+}
+
+function downloadPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
@@ -115,36 +128,28 @@ async function downloadPDF() {
                      today.getHours().toString().padStart(2,'0') +
                      today.getMinutes().toString().padStart(2,'0');
 
-    const img = new Image();
-    img.src = "logo.png";
+    // Header teks
+    doc.setFontSize(14);
+    doc.text("LEMBAR KONSULTASI TERAPI", 105, 15, null, null, "center");
+    doc.setFontSize(10);
+    doc.text("BebasNyeri.com", 105, 22, null, null, "center");
+    doc.text("Terapis: Bpk. Abu Khoir, S.Pd., M.Kom.", 105, 28, null, null, "center");
+    doc.line(10, 32, 200, 32);
 
-    img.onload = function () {
-        doc.addImage(img, "PNG", 10, 8, 40, 20);
+    doc.text("Tanggal: " + tanggal, 10, 38);
+    doc.text("No. Rekam Pasien: " + noPasien, 140, 38);
 
-        doc.setFontSize(14);
-        doc.text("LEMBAR KONSULTASI TERAPI", 105, 15, null, null, "center");
-        doc.setFontSize(10);
-        doc.text("BebasNyeri.com", 105, 22, null, null, "center");
-        doc.text("Terapis: Bpk. Abu Khoir, S.Pd., M.Kom.", 105, 28, null, null, "center");
-        doc.line(10, 32, 200, 32);
+    let text = hasil.textContent || "Prompt belum dibuat.";
+    let lines = doc.splitTextToSize(text, 180);
+    doc.text(lines, 10, 45);
 
-        doc.text("Tanggal: " + tanggal, 10, 38);
-        doc.text("No. Rekam Pasien: " + noPasien, 140, 38);
-
-        let text = hasil.textContent;
-        let lines = doc.splitTextToSize(text, 180);
-        doc.text(lines, 10, 45);
-
-        doc.save("Konsultasi_BebasNyeri_" + noPasien + ".pdf");
-    };
+    doc.save("Konsultasi_BebasNyeri_" + noPasien + ".pdf");
 }
 
-/* === PWA INSTALL SUPPORT === */
+/* PWA */
 if ('serviceWorker' in navigator) {
   const swCode = `
-    self.addEventListener('install', e => {
-      self.skipWaiting();
-    });
+    self.addEventListener('install', e => self.skipWaiting());
     self.addEventListener('fetch', e => {});
   `;
   const blob = new Blob([swCode], { type: 'text/javascript' });
