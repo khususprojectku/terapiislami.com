@@ -2,18 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Sistem Rekam Medis - Terapi Islami</title>
+<title>Form Rekam Medis - Terapi Islami</title>
 
 <style>
-
 body{
 font-family:Arial;
-background:#eef2f7;
+background:#f4f7fb;
 padding:20px;
 }
 
 .container{
-max-width:900px;
+max-width:800px;
 margin:auto;
 background:white;
 padding:25px;
@@ -28,8 +27,8 @@ color:#0b5394;
 
 label{
 font-weight:bold;
-margin-top:10px;
 display:block;
+margin-top:10px;
 }
 
 input,select,textarea{
@@ -41,12 +40,14 @@ border-radius:5px;
 }
 
 button{
-margin-top:15px;
+margin-top:20px;
 background:#0b5394;
 color:white;
 border:none;
-padding:10px;
-border-radius:5px;
+padding:12px;
+width:100%;
+font-size:16px;
+border-radius:6px;
 cursor:pointer;
 }
 
@@ -54,32 +55,12 @@ button:hover{
 background:#073763;
 }
 
-.table{
-margin-top:30px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:left;
-}
-
-th{
-background:#0b5394;
-color:white;
-}
-
-.status{
+.note{
 margin-top:10px;
 color:green;
 font-weight:bold;
+text-align:center;
 }
-
 </style>
 
 </head>
@@ -88,12 +69,9 @@ font-weight:bold;
 
 <div class="container">
 
-<h2>Sistem Rekam Medis - Terapi Islami</h2>
+<h2>Form Rekam Medis Pasien</h2>
 
-<label>No Rekam Medis</label>
-<input type="text" id="rm" readonly>
-
-<label>Tanggal</label>
+<label>Tanggal Kunjungan</label>
 <input type="date" id="tanggal">
 
 <label>Nama Pasien</label>
@@ -117,7 +95,7 @@ font-weight:bold;
 <label>Durasi Keluhan</label>
 <input type="text" id="durasi">
 
-<label>Riwayat Penyakit</label>
+<label>Riwayat Penyakit / Operasi</label>
 <textarea id="riwayat"></textarea>
 
 <label>Metode Terapi</label>
@@ -128,45 +106,19 @@ font-weight:bold;
 <option>PAZ</option>
 </select>
 
-<label>Diagnosa Terapis</label>
+<label>Catatan Diagnosa Terapis</label>
 <textarea id="diagnosa"></textarea>
 
-<button onclick="proses()">Generate Prompt & Copy</button>
+<button onclick="buatPrompt()">PROSES & COPY PROMPT</button>
 
-<div class="status" id="status"></div>
-
-<div class="table">
-
-<h3>Riwayat Pasien</h3>
-
-<table id="tabel">
-<tr>
-<th>No RM</th>
-<th>Nama</th>
-<th>Tanggal</th>
-<th>Copy Prompt</th>
-</tr>
-</table>
-
-</div>
+<div class="note" id="status"></div>
 
 </div>
 
 <script>
 
-function generateRM(){
-return "RM-"+Date.now();
-}
+function buatPrompt(){
 
-document.getElementById("rm").value=generateRM();
-
-document.getElementById("tanggal").value=new Date().toISOString().split('T')[0];
-
-loadData();
-
-function proses(){
-
-var rm=document.getElementById("rm").value;
 var tanggal=document.getElementById("tanggal").value;
 var nama=document.getElementById("nama").value;
 var umur=document.getElementById("umur").value;
@@ -178,30 +130,66 @@ var riwayat=document.getElementById("riwayat").value;
 var terapi=document.getElementById("terapi").value;
 var diagnosa=document.getElementById("diagnosa").value;
 
-var prompt=`
-Bertindaklah sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran modern.
+var prompt = `
+Bertindaklah sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran modern, rehabilitasi medis, nutrisi klinis, kesehatan saraf, kesehatan otot dan sendi, kesehatan metabolisme, kesehatan pencernaan, serta terapi komplementer.
+
+Analisis data pasien berikut secara profesional.
 
 DATA PASIEN
 
-No Rekam Medis : ${rm}
-Tanggal : ${tanggal}
+Tanggal Kunjungan : ${tanggal}
 Nama Pasien : ${nama}
 Umur : ${umur}
 Jenis Kelamin : ${jk}
 Agama : ${agama}
 
+RIWAYAT MEDIS
+
 Keluhan Utama : ${keluhan}
 Durasi Keluhan : ${durasi}
-Riwayat Penyakit : ${riwayat}
+Riwayat Penyakit atau Operasi : ${riwayat}
+
+TERAPI YANG DILAKUKAN
 
 Metode Terapi : ${terapi}
 
-Diagnosa Terapis :
+CATATAN DIAGNOSA TERAPIS
+
 ${diagnosa}
 
-Buat laporan kesehatan lengkap dalam format PDF.
+TUGAS ANDA
 
-HEADER
+Buatkan laporan kesehatan pasien yang sangat lengkap dengan struktur berikut:
+
+1 Ringkasan kondisi pasien
+
+2 Analisis kondisi kesehatan
+
+3 Sistem tubuh yang mungkin terlibat
+
+4 Faktor risiko kesehatan
+
+5 Hubungan dengan diagnosa terapis
+
+6 Penjelasan kondisi untuk pasien
+
+7 Rekomendasi makanan yang dianjurkan
+
+8 Makanan yang perlu dihindari
+
+9 Rekomendasi herbal alami
+
+10 Rekomendasi olahraga dan terapi fisik
+
+11 Rekomendasi terapi lanjutan
+
+12 Hal yang perlu dipantau
+
+13 Pesan edukatif untuk pasien
+
+FORMAT OUTPUT
+
+Buat laporan dalam format PDF dengan header berikut:
 
 Terapi Islami
 Ikhtiar Terapi, Kesembuhan dari Allah SWT
@@ -219,55 +207,17 @@ Abu Khoir, S.Pd., M.Kom.
 QR Code:
 https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFisc4nbYWXnxmsOy3HkTD6R9CHTEuXfUOLJf3MzT9jvdSnhNJYvtSp8T8M444CN0LYyu4pjd7GWSxUUBYmR6oB4wxmKTo17QwbBj69xuVU1eTBqQN5thSqFSo7AYUyLkGbPA9zYYWj0q6Wk78cXXGVSRqaaYQWzCqIMrP-Dj7a3-84AtyvAkSIT-9NF70/s1147/1000159312.png
 
-Disclaimer:
+Tambahkan disclaimer berikut di bagian bawah laporan:
 
+Catatan:
 Ini adalah bantuan berpikir berbasis AI, bukan diagnosis pasti.
 Gunakan informasi ini hanya sebagai bahan diskusi dengan dokter Anda.
-Jika kondisi memburuk segera cari bantuan medis profesional.
+Jika kondisi memburuk, segera cari bantuan medis profesional.
 `;
 
 navigator.clipboard.writeText(prompt);
 
-document.getElementById("status").innerHTML="Prompt berhasil dicopy.";
-
-var data=JSON.parse(localStorage.getItem("pasien")||"[]");
-
-data.push({rm,nama,tanggal,prompt});
-
-localStorage.setItem("pasien",JSON.stringify(data));
-
-loadData();
-
-}
-
-function loadData(){
-
-var tabel=document.getElementById("tabel");
-
-var data=JSON.parse(localStorage.getItem("pasien")||"[]");
-
-tabel.innerHTML="<tr><th>No RM</th><th>Nama</th><th>Tanggal</th><th>Copy Prompt</th></tr>";
-
-data.forEach((p,i)=>{
-
-var row=tabel.insertRow();
-
-row.insertCell(0).innerHTML=p.rm;
-row.insertCell(1).innerHTML=p.nama;
-row.insertCell(2).innerHTML=p.tanggal;
-row.insertCell(3).innerHTML="<button onclick='copyPrompt("+i+")'>Copy</button>";
-
-});
-
-}
-
-function copyPrompt(i){
-
-var data=JSON.parse(localStorage.getItem("pasien"));
-
-navigator.clipboard.writeText(data[i].prompt);
-
-alert("Prompt dicopy kembali");
+document.getElementById("status").innerHTML="✅ Prompt berhasil dicopy. Silakan paste ke ChatGPT.";
 
 }
 
