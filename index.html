@@ -1,182 +1,277 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laporan Pasien Bebas Nyeri</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>Sistem Rekam Medis - Terapi Islami</title>
+
 <style>
-body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-h2 { text-align:center; }
-input, textarea, select { width:100%; padding:8px; margin:6px 0 12px; border-radius:6px; border:1px solid #ccc; }
-button { padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
-.primary { background:#2e86de; color:white; }
-.success { background:#27ae60; color:white; }
-textarea { min-height:90px; }
-.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.small { font-size:12px; color:#666; }
+
+body{
+font-family:Arial;
+background:#eef2f7;
+padding:20px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+color:#0b5394;
+}
+
+label{
+font-weight:bold;
+margin-top:10px;
+display:block;
+}
+
+input,select,textarea{
+width:100%;
+padding:8px;
+margin-top:5px;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button{
+margin-top:15px;
+background:#0b5394;
+color:white;
+border:none;
+padding:10px;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+background:#073763;
+}
+
+.table{
+margin-top:30px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:left;
+}
+
+th{
+background:#0b5394;
+color:white;
+}
+
+.status{
+margin-top:10px;
+color:green;
+font-weight:bold;
+}
+
 </style>
+
 </head>
+
 <body>
+
 <div class="container">
-<h2>Form Konsultasi Terapi Bebas Nyeri</h2>
 
-<label>Nama Pasien</label><input id="nama">
-<label>Umur</label><input id="umur" type="number">
+<h2>Sistem Rekam Medis - Terapi Islami</h2>
+
+<label>No Rekam Medis</label>
+<input type="text" id="rm" readonly>
+
+<label>Tanggal</label>
+<input type="date" id="tanggal">
+
+<label>Nama Pasien</label>
+<input type="text" id="nama">
+
+<label>Umur</label>
+<input type="number" id="umur">
+
 <label>Jenis Kelamin</label>
-<select id="jk"><option>Laki-laki</option><option>Perempuan</option></select>
+<select id="jk">
+<option>Laki-laki</option>
+<option>Perempuan</option>
+</select>
 
-<label>Sedang Hamil?</label>
-<select id="hamil"><option>Tidak</option><option>Ya</option></select>
-<label>Jika hamil, berapa bulan?</label><input id="bulanHamil">
+<label>Agama</label>
+<input type="text" id="agama">
 
-<label>Pernah Operasi? Operasi apa?</label><textarea id="operasi"></textarea>
-<label>Keluhan Saat Ini</label><textarea id="keluhan"></textarea>
-<label>Riwayat Penyakit</label><textarea id="penyakit"></textarea>
+<label>Keluhan Utama</label>
+<textarea id="keluhan"></textarea>
 
-<h3>Hasil Pemeriksaan</h3>
-<div class="grid2">
-<input id="tensi" placeholder="Tekanan Darah (120/80)">
-<input id="hb" placeholder="HB (g/dL)">
-<input id="gula" placeholder="Gula Darah (mg/dL)">
-<input id="kolesterol" placeholder="Kolesterol (mg/dL)">
-<input id="asamUrat" placeholder="Asam Urat (mg/dL)">
-<input id="bb" placeholder="Berat Badan (kg)">
-<input id="tb" placeholder="Tinggi Badan (cm)">
+<label>Durasi Keluhan</label>
+<input type="text" id="durasi">
+
+<label>Riwayat Penyakit</label>
+<textarea id="riwayat"></textarea>
+
+<label>Metode Terapi</label>
+<select id="terapi">
+<option>Bekam</option>
+<option>Terapi Fisik</option>
+<option>Terapi Titik</option>
+<option>PAZ</option>
+</select>
+
+<label>Diagnosa Terapis</label>
+<textarea id="diagnosa"></textarea>
+
+<button onclick="proses()">Generate Prompt & Copy</button>
+
+<div class="status" id="status"></div>
+
+<div class="table">
+
+<h3>Riwayat Pasien</h3>
+
+<table id="tabel">
+<tr>
+<th>No RM</th>
+<th>Nama</th>
+<th>Tanggal</th>
+<th>Copy Prompt</th>
+</tr>
+</table>
+
 </div>
 
-<button class="primary" onclick="buatPrompt()">Buat Prompt AI + Copy</button>
-
-<label>Hasil Saran Terapi</label>
-<textarea id="hasilAI"></textarea>
-
-<button class="success" onclick="buatDanSharePDF()">Buat & Share Laporan PDF</button>
-<p class="small">Terapis: Bpk. Abu Khoir, S.Pd., M.Kom</p>
 </div>
 
 <script>
-function hapusEmoji(teks){ return (teks||"").replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,"").replace(/\s{2,}/g," "); }
-function safeText(v){ return (v||"").toString(); }
 
-function buatPrompt(){
-const prompt = `Anda adalah asisten terapi BebasNyeri.com.
-Data Pasien:
-Nama: ${safeText(nama.value)}
-Umur: ${safeText(umur.value)}
-Jenis Kelamin: ${safeText(jk.value)}
-Sedang Hamil: ${safeText(hamil.value)}
-Bulan Kehamilan: ${safeText(bulanHamil.value)}
-Riwayat Operasi: ${safeText(operasi.value)}
-Keluhan: ${safeText(keluhan.value)}
-Riwayat Penyakit: ${safeText(penyakit.value)}
-Hasil Pemeriksaan:
-Tensi: ${safeText(tensi.value)}
-HB: ${safeText(hb.value)}
-Gula Darah: ${safeText(gula.value)}
-Kolesterol: ${safeText(kolesterol.value)}
-Asam Urat: ${safeText(asamUrat.value)}
-Berat Badan: ${safeText(bb.value)}
-Tinggi Badan: ${safeText(tb.value)}
-Berikan saran terapi & pantangan makan/minum TANPA EMOJI.`;
-navigator.clipboard.writeText(prompt);
-alert("Prompt berhasil disalin");
+function generateRM(){
+return "RM-"+Date.now();
 }
 
-function buatDanSharePDF(){
-try{
-const { jsPDF } = window.jspdf;
-const doc = new jsPDF();
-const logoUrl = "https://khususprojectku.github.io/terapiislami.com/logo.png";
-const tanggal = new Date().toLocaleDateString("id-ID");
+document.getElementById("rm").value=generateRM();
 
-// ambil logo sebagai base64
-fetch(logoUrl).then(r=>r.blob()).then(logoBlob=>{
- const fr=new FileReader();
- fr.onload=()=>{
-   const logoBase64 = fr.result;
-   let y=45;
-   const pageHeight = doc.internal.pageSize.height;
+document.getElementById("tanggal").value=new Date().toISOString().split('T')[0];
 
-   function header(){ 
-     doc.addImage(logoBase64,"PNG",10,8,25,25); 
-     doc.setFontSize(14); doc.setFont(undefined,"bold"); 
-     doc.text("LAPORAN TERAPI BEBAS NYERI",105,15,null,null,"center"); 
-     doc.setFontSize(10); doc.setFont(undefined,"normal"); 
-     doc.text("Jln. Cendana no. 3 Kisaran",105,22,null,null,"center"); 
-     doc.line(10,35,200,35); 
-     y=45; 
-   }
-   function checkPage(){ if(y>pageHeight-20){doc.addPage();header();} }
-   function judul(t){ checkPage(); doc.setFont(undefined,"bold"); doc.setFontSize(12); doc.text(t.toUpperCase(),10,y); y+=8; doc.setFontSize(10);}
-   function field(l,v){ 
-     checkPage(); 
-     doc.setFont(undefined,"bold"); doc.text(l,10,y); 
-     y+=6; 
-     doc.setFont(undefined,"normal"); 
-     const lines = doc.splitTextToSize(hapusEmoji(safeText(v)),180);
-     lines.forEach(line=>{checkPage(); doc.text(line,12,y); y+=6}); 
-     y+=3;
-   }
+loadData();
 
-   function tabelPemeriksaan(){
-     judul("TABEL HASIL PEMERIKSAAN");
-     const rows = [
-       ["Jenis Pemeriksaan","Hasil"],
-       ["Tekanan Darah",safeText(tensi.value)],
-       ["Hemoglobin (HB)",safeText(hb.value)],
-       ["Gula Darah",safeText(gula.value)],
-       ["Kolesterol",safeText(kolesterol.value)],
-       ["Asam Urat",safeText(asamUrat.value)],
-       ["Berat Badan",safeText(bb.value)+" kg"],
-       ["Tinggi Badan",safeText(tb.value)+" cm"]
-     ];
-     const rowHeight = 8;
-     rows.forEach((r,i)=>{
-       checkPage();
-       doc.setFont(undefined,i==0?"bold":"normal");
-       doc.rect(10,y,90,rowHeight); doc.rect(100,y,90,rowHeight);
-       const cellPadding = 2;
-       doc.text(r[0],12,y+rowHeight-2); 
-       doc.text(r[1],102,y+rowHeight-2); 
-       y+=rowHeight;
-     });
-     y+=5;
-   }
+function proses(){
 
-   header();
-   judul("DATA PASIEN");
-   field("Nama Pasien",nama.value);
-   field("Umur",safeText(umur.value)+" tahun");
-   field("Jenis Kelamin",safeText(jk.value));
-   judul("STATUS KEHAMILAN");
-   field("Sedang Hamil",safeText(hamil.value));
-   field("Bulan Kehamilan",safeText(bulanHamil.value));
-   judul("RIWAYAT MEDIS");
-   field("Riwayat Operasi",safeText(operasi.value));
-   field("Riwayat Penyakit",safeText(penyakit.value));
-   tabelPemeriksaan();
-   judul("KELUHAN PASIEN"); field("Keluhan",safeText(keluhan.value));
-   judul("SARAN TERAPI & PANTANGAN"); field("Hasil Saran Terapi",safeText(hasilAI.value));
-   doc.setFont(undefined,"italic"); doc.text("Catatan: Terapi pendamping dan tidak menggantikan pengobatan dokter.",10,y+10);
-   doc.setFont(undefined,"normal"); doc.text("Terapis,",10,y+25);
-   doc.setFont(undefined,"bold"); doc.text("Bpk. Abu Khoir, S.Pd., M.Kom",10,y+35);
+var rm=document.getElementById("rm").value;
+var tanggal=document.getElementById("tanggal").value;
+var nama=document.getElementById("nama").value;
+var umur=document.getElementById("umur").value;
+var jk=document.getElementById("jk").value;
+var agama=document.getElementById("agama").value;
+var keluhan=document.getElementById("keluhan").value;
+var durasi=document.getElementById("durasi").value;
+var riwayat=document.getElementById("riwayat").value;
+var terapi=document.getElementById("terapi").value;
+var diagnosa=document.getElementById("diagnosa").value;
 
-   // Nomor halaman
-   const total=doc.getNumberOfPages();
-   for(let i=1;i<=total;i++){ doc.setPage(i); doc.setFontSize(10); doc.text("Halaman "+i+" dari "+total,105,290,null,null,"center"); }
+var prompt=`
+Bertindaklah sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran modern.
 
-   const blob=doc.output("blob");
-   const file=new File([blob],"Laporan_Terapi_"+safeText(nama.value)+".pdf",{type:"application/pdf"});
-   if(navigator.canShare && navigator.canShare({files:[file]})){
-     navigator.share({files:[file],title:"Laporan Pasien"});
-   }else{ doc.save("Laporan_Terapi_"+safeText(nama.value)+".pdf"); }
- };
- fr.readAsDataURL(logoBlob);
+DATA PASIEN
+
+No Rekam Medis : ${rm}
+Tanggal : ${tanggal}
+Nama Pasien : ${nama}
+Umur : ${umur}
+Jenis Kelamin : ${jk}
+Agama : ${agama}
+
+Keluhan Utama : ${keluhan}
+Durasi Keluhan : ${durasi}
+Riwayat Penyakit : ${riwayat}
+
+Metode Terapi : ${terapi}
+
+Diagnosa Terapis :
+${diagnosa}
+
+Buat laporan kesehatan lengkap dalam format PDF.
+
+HEADER
+
+Terapi Islami
+Ikhtiar Terapi, Kesembuhan dari Allah SWT
+Official Website: www.terapiislami.com
+WhatsApp: 085276-456789
+
+Logo:
+https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfzvRuv2EmBUdExyNh6-bzYM2cpsiB2SAbkawzsyMXrxbuLcPF6Fi0WGN7W9rMDn-T_vAfiTpLHW6OwyqpC3HB7izcFHpRQIDf_YLzzsvtEz2kUBxgMde2Pm5zBYGrVcqAnS1gIFMCrePzUUhtEDznNgq7HfHlef9jDywF8payqZxqppecXPKj57MWNxO6/s1024/1000159180.png
+
+Di bagian footer juga tampilkan:
+
+Terapis
+Abu Khoir, S.Pd., M.Kom.
+
+QR Code:
+https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFisc4nbYWXnxmsOy3HkTD6R9CHTEuXfUOLJf3MzT9jvdSnhNJYvtSp8T8M444CN0LYyu4pjd7GWSxUUBYmR6oB4wxmKTo17QwbBj69xuVU1eTBqQN5thSqFSo7AYUyLkGbPA9zYYWj0q6Wk78cXXGVSRqaaYQWzCqIMrP-Dj7a3-84AtyvAkSIT-9NF70/s1147/1000159312.png
+
+Disclaimer:
+
+Ini adalah bantuan berpikir berbasis AI, bukan diagnosis pasti.
+Gunakan informasi ini hanya sebagai bahan diskusi dengan dokter Anda.
+Jika kondisi memburuk segera cari bantuan medis profesional.
+`;
+
+navigator.clipboard.writeText(prompt);
+
+document.getElementById("status").innerHTML="Prompt berhasil dicopy.";
+
+var data=JSON.parse(localStorage.getItem("pasien")||"[]");
+
+data.push({rm,nama,tanggal,prompt});
+
+localStorage.setItem("pasien",JSON.stringify(data));
+
+loadData();
+
+}
+
+function loadData(){
+
+var tabel=document.getElementById("tabel");
+
+var data=JSON.parse(localStorage.getItem("pasien")||"[]");
+
+tabel.innerHTML="<tr><th>No RM</th><th>Nama</th><th>Tanggal</th><th>Copy Prompt</th></tr>";
+
+data.forEach((p,i)=>{
+
+var row=tabel.insertRow();
+
+row.insertCell(0).innerHTML=p.rm;
+row.insertCell(1).innerHTML=p.nama;
+row.insertCell(2).innerHTML=p.tanggal;
+row.insertCell(3).innerHTML="<button onclick='copyPrompt("+i+")'>Copy</button>";
+
 });
 
-}catch(err){ alert("Gagal membuat PDF: "+err.message); console.error(err);}
 }
+
+function copyPrompt(i){
+
+var data=JSON.parse(localStorage.getItem("pasien"));
+
+navigator.clipboard.writeText(data[i].prompt);
+
+alert("Prompt dicopy kembali");
+
+}
+
 </script>
+
 </body>
 </html>
