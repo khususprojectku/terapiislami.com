@@ -1,325 +1,278 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Sistem Rekam Medis - Terapi Islami</title>
-
-<style>
+<!DOCTYPE html><html lang="id">
+<head><meta charset="UTF-8">
+<title>Generator Laporan Terapi Islami AI</title><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><style>
 
 body{
-font-family:Arial;
-background:#eef2f7;
-padding:20px;
+font-family:Arial, sans-serif;
+background:#eef3fb;
+padding:30px;
 }
 
 .container{
-max-width:900px;
-margin:auto;
 background:white;
-padding:25px;
+padding:30px;
 border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
+max-width:800px;
+margin:auto;
+box-shadow:0 0 12px rgba(0,0,0,0.15);
 }
 
 h2{
 text-align:center;
-color:#0b5394;
+color:#2c5aa0;
+}
+
+h3{
+margin-top:25px;
+color:#2c5aa0;
 }
 
 label{
 font-weight:bold;
-margin-top:10px;
-display:block;
 }
 
 input,select,textarea{
 width:100%;
-padding:8px;
+padding:10px;
 margin-top:5px;
+margin-bottom:12px;
+border-radius:6px;
 border:1px solid #ccc;
-border-radius:5px;
+}
+
+textarea{
+height:120px;
 }
 
 button{
-margin-top:15px;
-background:#0b5394;
+background:#2c5aa0;
 color:white;
+padding:12px;
 border:none;
-padding:10px;
-border-radius:5px;
+border-radius:6px;
+width:100%;
+font-size:16px;
 cursor:pointer;
+margin-top:10px;
 }
 
 button:hover{
-background:#073763;
+background:#1f3e73;
 }
 
-.table{
-margin-top:30px;
-}
+</style></head><body><div class="container"><h2>Generator Laporan Terapi Islami AI</h2><h3>Data Pasien</h3><label>Nomor Rekam Medis</label>
+<input id="rm">
 
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:left;
-}
-
-th{
-background:#0b5394;
-color:white;
-}
-
-.status{
-margin-top:10px;
-color:green;
-font-weight:bold;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<h2>Sistem Rekam Medis - Terapi Islami</h2>
-
-<label>No Rekam Medis</label>
-<input type="text" id="rm" readonly>
-
-<label>Tanggal</label>
-<input type="date" id="tanggal">
+<label>Tanggal Kunjungan</label>
+<input id="tanggal">
 
 <label>Nama Pasien</label>
-<input type="text" id="nama">
+<input id="nama">
 
 <label>Umur</label>
-<input type="number" id="umur">
+<input id="umur">
 
 <label>Jenis Kelamin</label>
 <select id="jk">
+
 <option>Laki-laki</option>
 <option>Perempuan</option>
-</select>
+</select><label>Status Kehamilan</label>
+<select id="hamil" onchange="cekHamil()">
 
-<label>Agama</label>
-<input type="text" id="agama">
+<option>Tidak</option>
+<option>Ya</option>
+</select><div id="bulanHamil" style="display:none"><label>Bulan Kehamilan</label>
+<input id="bulan">
 
-<label>Keluhan Utama</label>
-<textarea id="keluhan"></textarea>
+</div><h3>Pemeriksaan</h3><label>Tensi</label>
+<input id="tensi">
 
-<label>Durasi Keluhan</label>
-<input type="text" id="durasi">
+<label>HB</label>
+<input id="hb">
 
-<label>Riwayat Penyakit</label>
-<textarea id="riwayat"></textarea>
+<label>Gula Darah</label>
+<input id="gula">
 
-<label>Metode Terapi</label>
-<select id="terapi">
-<option>Bekam</option>
-<option>Terapi Fisik</option>
-<option>Terapi Titik</option>
-<option>PAZ</option>
-</select>
+<label>Kolesterol</label>
+<input id="kolesterol">
 
-<label>Diagnosa Terapis</label>
-<textarea id="diagnosa"></textarea>
+<label>Asam Urat</label>
+<input id="urat">
 
-<button onclick="proses()">Generate Prompt & Copy</button>
+<label>Berat Badan</label>
+<input id="bb">
 
-<div class="status" id="status"></div>
+<label>Tinggi Badan</label>
+<input id="tb">
 
-<div class="table">
+<h3>Riwayat Medis</h3><label>Keluhan Utama</label>
 
-<h3>Riwayat Pasien</h3>
+<textarea id="keluhan"></textarea><label>Durasi Keluhan</label>
+<input id="durasi">
 
-<table id="tabel">
-<tr>
-<th>No RM</th>
-<th>Nama</th>
-<th>Tanggal</th>
-<th>Copy Prompt</th>
-</tr>
-</table>
+<label>Riwayat Penyakit / Operasi</label>
+<input id="riwayat">
 
-</div>
+<h3>Terapi</h3><label>Metode Terapi</label>
+<input id="terapi">
 
-</div>
+<label>Catatan Terapis</label>
 
-<script>
+<textarea id="diagnosa"></textarea><button onclick="generatePrompt()">Generate Prompt AI</button>
 
-function generateRM(){
-return "RM-"+Date.now();
+<textarea id="prompt"></textarea><button onclick="copyPrompt()">Copy Prompt</button>
+
+<button onclick="buatPDF()">Download Laporan PDF</button>
+
+</div><script>
+
+function cekHamil(){
+
+let hamil=document.getElementById("hamil").value
+
+if(hamil==="Ya"){
+document.getElementById("bulanHamil").style.display="block"
+}else{
+document.getElementById("bulanHamil").style.display="none"
 }
 
-document.getElementById("rm").value=generateRM();
+}
 
-document.getElementById("tanggal").value=new Date().toISOString().split('T')[0];
+function generatePrompt(){
 
-loadData();
+let rm=document.getElementById("rm").value
+let tanggal=document.getElementById("tanggal").value
+let nama=document.getElementById("nama").value
+let umur=document.getElementById("umur").value
+let jk=document.getElementById("jk").value
+let hamil=document.getElementById("hamil").value
+let bulan=document.getElementById("bulan").value
 
-function proses(){
+let tensi=document.getElementById("tensi").value
+let hb=document.getElementById("hb").value
+let gula=document.getElementById("gula").value
+let kol=document.getElementById("kolesterol").value
+let urat=document.getElementById("urat").value
 
-var rm=document.getElementById("rm").value;
-var tanggal=document.getElementById("tanggal_kunjungan").value;
-var nama=document.getElementById("nama_pasien").value;
-var umur=document.getElementById("umur").value;
-var jk=document.getElementById("jenis_kelamin").value;
-var agama=document.getElementById("agama").value;
-var keluhan=document.getElementById("keluhan_utama").value;
-var durasi=document.getElementById("durasi_keluhan").value;
-var riwayat=document.getElementById("riwayat_penyakit").value;
-var terapi=document.getElementById("metode_terapi").value;
-var diagnosa=document.getElementById("diagnosa_terapis").value;
+let bb=document.getElementById("bb").value
+let tb=document.getElementById("tb").value
 
-var prompt=`
-Anda bertindak sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran modern, kesehatan preventif, rehabilitasi medis, nutrisi klinis, kesehatan saraf, kesehatan otot dan sendi, metabolisme tubuh, kesehatan pencernaan, kesehatan mental, serta berbagai pendekatan terapi komplementer dan kesehatan holistik.
+let keluhan=document.getElementById("keluhan").value
+let durasi=document.getElementById("durasi").value
+let riwayat=document.getElementById("riwayat").value
 
-Anda mampu menganalisis kondisi pasien secara menyeluruh dan memberikan rekomendasi terapi, pola hidup sehat, serta program pemulihan kesehatan.
+let terapi=document.getElementById("terapi").value
+let diagnosa=document.getElementById("diagnosa").value
 
-Analisislah data pasien berikut secara objektif, profesional, dan komprehensif.
+let teks=`Bertindaklah sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran.
 
 DATA PASIEN
 
-Tanggal Kunjungan : {{tanggal_kunjungan}}
-Nama Pasien : {{nama_pasien}}
-Umur : {{umur}}
-Jenis Kelamin : {{jenis_kelamin}}
-Agama : {{agama}}
+No Rekam Medis : ${rm}
+Tanggal : ${tanggal}
+
+Nama : ${nama}
+Umur : ${umur}
+Jenis Kelamin : ${jk}
+
+Status Kehamilan : ${hamil}
+Bulan Kehamilan : ${bulan}
+
+PEMERIKSAAN
+
+Tensi : ${tensi}
+HB : ${hb}
+Gula Darah : ${gula}
+Kolesterol : ${kol}
+Asam Urat : ${urat}
+
+Berat Badan : ${bb}
+Tinggi Badan : ${tb}
 
 RIWAYAT MEDIS
 
-Keluhan Utama : {{keluhan_utama}}
-Durasi Keluhan : {{durasi_keluhan}}
-Riwayat Penyakit atau Operasi : {{riwayat_penyakit}}
+Keluhan Utama : ${keluhan}
+Durasi Keluhan : ${durasi}
+Riwayat Penyakit : ${riwayat}
 
-TERAPI YANG DILAKUKAN
+TERAPI
 
-Metode Terapi :
-{{metode_terapi}}
+Metode Terapi : ${terapi}
 
-CATATAN DIAGNOSA TERAPIS
+Catatan Terapis :
+${diagnosa}
 
-{{diagnosa_terapis}}
+Buat laporan kesehatan lengkap.`
 
-TUGAS ANDA
-
-Berdasarkan data tersebut, buatkan laporan kesehatan pasien secara lengkap dengan struktur berikut.
-
-1. RINGKASAN KONDISI PASIEN
-Tuliskan ringkasan kondisi pasien secara singkat dan jelas.
-
-2. ANALISIS KONDISI KESEHATAN
-Jelaskan kemungkinan penyebab keluhan pasien dari berbagai sudut pandang medis.
-
-3. SISTEM TUBUH YANG TERLIBAT
-Jelaskan sistem tubuh yang kemungkinan terlibat seperti:
-sistem saraf
-sistem otot dan sendi
-sistem pencernaan
-sistem metabolisme
-sistem hormon
-sistem kardiovaskular
-atau sistem tubuh lainnya.
-
-4. FAKTOR RISIKO
-Jelaskan faktor yang dapat memperburuk kondisi pasien seperti:
-pola makan
-kurang aktivitas
-stres
-kurang tidur
-postur tubuh buruk
-kebiasaan harian
-
-5. HUBUNGAN DENGAN DIAGNOSA TERAPIS
-Jelaskan hubungan antara keluhan pasien dan diagnosa yang diberikan oleh terapis.
-
-6. PENJELASAN KONDISI UNTUK PASIEN
-Berikan penjelasan sederhana agar pasien memahami kondisi tubuhnya.
-
-7. REKOMENDASI MAKANAN
-Buat daftar makanan yang dianjurkan untuk membantu pemulihan pasien.
-
-8. MAKANAN YANG PERLU DIHINDARI
-Buat daftar makanan yang dapat memperburuk kondisi pasien.
-
-9. REKOMENDASI HERBAL ALAMI
-Jika relevan, berikan rekomendasi herbal alami yang aman seperti:
-madu
-jahe
-kunyit
-habbatussauda
-atau herbal lainnya.
-
-10. SARAN OLAHRAGA DAN TERAPI FISIK
-Berikan rekomendasi aktivitas fisik yang aman seperti:
-peregangan
-jalan kaki
-latihan ringan
-latihan postur tubuh
-
-11. REKOMENDASI TERAPI
-Jelaskan bagaimana metode terapi yang dilakukan dapat membantu pemulihan pasien.
-
-12. HAL YANG PERLU DIPANTAU
-Sebutkan gejala yang perlu diperhatikan oleh pasien.
-
-13. PESAN EDUKATIF UNTUK PASIEN
-Tuliskan pesan motivasi kesehatan agar pasien lebih disiplin menjaga kesehatannya.
-`;
-
-navigator.clipboard.writeText(prompt);
-
-document.getElementById("status").innerHTML="Prompt berhasil dicopy.";
-
-var data=JSON.parse(localStorage.getItem("pasien")||"[]");
-
-data.push({rm,nama,tanggal,prompt});
-
-localStorage.setItem("pasien",JSON.stringify(data));
-
-loadData();
+document.getElementById("prompt").value=teks
 
 }
 
-function loadData(){
+function copyPrompt(){
 
-var tabel=document.getElementById("tabel");
+let copyText=document.getElementById("prompt")
 
-var data=JSON.parse(localStorage.getItem("pasien")||"[]");
+copyText.select()
 
-tabel.innerHTML="<tr><th>No RM</th><th>Nama</th><th>Tanggal</th><th>Copy Prompt</th></tr>";
+document.execCommand("copy")
 
-data.forEach((p,i)=>{
-
-var row=tabel.insertRow();
-
-row.insertCell(0).innerHTML=p.rm;
-row.insertCell(1).innerHTML=p.nama;
-row.insertCell(2).innerHTML=p.tanggal;
-row.insertCell(3).innerHTML="<button onclick='copyPrompt("+i+")'>Copy</button>";
-
-});
+alert("Prompt berhasil dicopy")
 
 }
 
-function copyPrompt(i){
+async function buatPDF(){
 
-var data=JSON.parse(localStorage.getItem("pasien"));
+const { jsPDF } = window.jspdf
 
-navigator.clipboard.writeText(data[i].prompt);
+const doc=new jsPDF()
 
-alert("Prompt dicopy kembali");
+let y=20
+
+doc.setFontSize(16)
+doc.text("Terapi Islami",105,y,null,null,"center")
+
+y+=7
+doc.setFontSize(10)
+doc.text("Ikhtiar Terapi, Kesembuhan dari Allah SWT",105,y,null,null,"center")
+
+y+=5
+doc.text("www.terapiislami.com",105,y,null,null,"center")
+
+y+=5
+doc.text("WhatsApp: 085276456789",105,y,null,null,"center")
+
+y+=10
+
+doc.setFontSize(12)
+doc.text("DATA PASIEN",20,y)
+
+y+=8
+
+doc.setFontSize(10)
+
+doc.text("Nama : "+document.getElementById("nama").value,20,y);y+=6
+doc.text("Umur : "+document.getElementById("umur").value,20,y);y+=6
+doc.text("Jenis Kelamin : "+document.getElementById("jk").value,20,y);y+=6
+doc.text("Status Kehamilan : "+document.getElementById("hamil").value,20,y);y+=6
+
+doc.text("Keluhan : "+document.getElementById("keluhan").value,20,y);y+=6
+doc.text("Durasi : "+document.getElementById("durasi").value,20,y);y+=6
+doc.text("Riwayat Penyakit : "+document.getElementById("riwayat").value,20,y);y+=6
+doc.text("Metode Terapi : "+document.getElementById("terapi").value,20,y);y+=6
+
+y+=12
+
+doc.text("Terapis",150,260)
+doc.text("Abu Khoir, S.Pd., M.Kom.",120,266)
+
+doc.setFontSize(8)
+
+doc.text("Ini adalah bantuan berpikir berbasis AI, bukan diagnosis pasti.",20,280)
+
+doc.save("laporan_pasien.pdf")
 
 }
 
-</script>
-
-</body>
+</script></body>
 </html>
