@@ -1,22 +1,30 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Generator Laporan Terapi Islami AI</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
+*{
+box-sizing:border-box;
+}
+
 body{
 font-family:Arial, sans-serif;
 background:#eef3fb;
-padding:30px;
+padding:15px;
+margin:0;
 }
 
 .container{
 background:white;
-padding:30px;
+padding:20px;
 border-radius:10px;
 max-width:800px;
 margin:auto;
@@ -26,36 +34,41 @@ box-shadow:0 0 12px rgba(0,0,0,0.15);
 h2{
 text-align:center;
 color:#2c5aa0;
+font-size:22px;
 }
 
 h3{
 margin-top:25px;
 color:#2c5aa0;
+font-size:18px;
 }
 
 label{
 font-weight:bold;
+font-size:14px;
 }
 
 input,select,textarea{
 width:100%;
-padding:10px;
-margin-top:5px;
-margin-bottom:12px;
+padding:12px;
+margin-top:6px;
+margin-bottom:14px;
 border-radius:6px;
 border:1px solid #ccc;
+font-size:16px;
 }
 
 textarea{
 height:120px;
+resize:vertical;
 }
 
 button{
 background:#2c5aa0;
 color:white;
-padding:12px;
+padding:14px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 width:100%;
 font-size:16px;
 cursor:pointer;
@@ -64,6 +77,26 @@ margin-top:10px;
 
 button:hover{
 background:#1f3e73;
+}
+
+@media (max-width:600px){
+
+body{
+padding:10px;
+}
+
+.container{
+padding:15px;
+}
+
+h2{
+font-size:20px;
+}
+
+h3{
+font-size:16px;
+}
+
 }
 
 </style>
@@ -151,7 +184,7 @@ background:#1f3e73;
 <input id="durasi">
 
 <label>Riwayat Penyakit / Operasi</label>
-<input id="riwayat">
+<textarea id="riwayat"></textarea>
 
 <h3>Terapi</h3>
 
@@ -287,10 +320,10 @@ TUGAS ANDA
 4 Faktor risiko kesehatan
 5 Hubungan dengan diagnosa terapis
 6 Penjelasan kondisi untuk pasien
-7 Rekomendasi makanan yang dianjurkan
+7 Rekomendasi makanan
 8 Makanan yang perlu dihindari
 9 Rekomendasi herbal alami
-10 Rekomendasi olahraga dan terapi fisik
+10 Rekomendasi olahraga
 11 Rekomendasi terapi lanjutan
 12 Hal yang perlu dipantau
 13 Pesan edukatif untuk pasien
@@ -315,7 +348,6 @@ alert("Prompt berhasil dicopy")
 async function buatPDF(){
 
 const { jsPDF } = window.jspdf
-
 const doc=new jsPDF()
 
 let y=20
@@ -333,7 +365,7 @@ doc.text("www.terapiislami.com",105,y,null,null,"center")
 y+=5
 doc.text("WhatsApp: 085276456789",105,y,null,null,"center")
 
-y+=10
+y+=12
 
 doc.setFontSize(12)
 doc.text("DATA PASIEN",20,y)
@@ -346,21 +378,12 @@ doc.text("Nama : "+document.getElementById("nama").value,20,y);y+=6
 doc.text("Umur : "+document.getElementById("umur").value,20,y);y+=6
 doc.text("Jenis Kelamin : "+document.getElementById("jk").value,20,y);y+=6
 doc.text("Agama : "+document.getElementById("agama").value,20,y);y+=6
-
-doc.text("Status Kehamilan : "+document.getElementById("hamil").value,20,y);y+=6
-
 doc.text("Keluhan : "+document.getElementById("keluhan").value,20,y);y+=6
 doc.text("Durasi : "+document.getElementById("durasi").value,20,y);y+=6
-doc.text("Riwayat Penyakit : "+document.getElementById("riwayat").value,20,y);y+=6
+doc.text("Riwayat : "+document.getElementById("riwayat").value,20,y);y+=6
 doc.text("Metode Terapi : "+document.getElementById("terapi").value,20,y);y+=6
 
-y+=12
-
-doc.text("Terapis",150,260)
-doc.text("Abu Khoir, S.Pd., M.Kom.",120,266)
-
 doc.setFontSize(8)
-
 doc.text("Ini adalah bantuan berpikir berbasis AI, bukan diagnosis pasti.",20,280)
 
 doc.save("laporan_pasien.pdf")
