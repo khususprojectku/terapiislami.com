@@ -2,17 +2,18 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Form Rekam Medis - Terapi Islami</title>
+<title>Sistem Rekam Medis - Terapi Islami</title>
 
 <style>
+
 body{
 font-family:Arial;
-background:#f4f7fb;
+background:#eef2f7;
 padding:20px;
 }
 
 .container{
-max-width:800px;
+max-width:900px;
 margin:auto;
 background:white;
 padding:25px;
@@ -27,8 +28,8 @@ color:#0b5394;
 
 label{
 font-weight:bold;
-display:block;
 margin-top:10px;
+display:block;
 }
 
 input,select,textarea{
@@ -40,14 +41,12 @@ border-radius:5px;
 }
 
 button{
-margin-top:20px;
+margin-top:15px;
 background:#0b5394;
 color:white;
 border:none;
-padding:12px;
-width:100%;
-font-size:16px;
-border-radius:6px;
+padding:10px;
+border-radius:5px;
 cursor:pointer;
 }
 
@@ -55,12 +54,32 @@ button:hover{
 background:#073763;
 }
 
-.note{
+.table{
+margin-top:30px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:left;
+}
+
+th{
+background:#0b5394;
+color:white;
+}
+
+.status{
 margin-top:10px;
 color:green;
 font-weight:bold;
-text-align:center;
 }
+
 </style>
 
 </head>
@@ -69,9 +88,12 @@ text-align:center;
 
 <div class="container">
 
-<h2>Form Rekam Medis Pasien</h2>
+<h2>Sistem Rekam Medis - Terapi Islami</h2>
 
-<label>Tanggal Kunjungan</label>
+<label>No Rekam Medis</label>
+<input type="text" id="rm" readonly>
+
+<label>Tanggal</label>
 <input type="date" id="tanggal">
 
 <label>Nama Pasien</label>
@@ -95,7 +117,7 @@ text-align:center;
 <label>Durasi Keluhan</label>
 <input type="text" id="durasi">
 
-<label>Riwayat Penyakit / Operasi</label>
+<label>Riwayat Penyakit</label>
 <textarea id="riwayat"></textarea>
 
 <label>Metode Terapi</label>
@@ -106,118 +128,194 @@ text-align:center;
 <option>PAZ</option>
 </select>
 
-<label>Catatan Diagnosa Terapis</label>
+<label>Diagnosa Terapis</label>
 <textarea id="diagnosa"></textarea>
 
-<button onclick="buatPrompt()">PROSES & COPY PROMPT</button>
+<button onclick="proses()">Generate Prompt & Copy</button>
 
-<div class="note" id="status"></div>
+<div class="status" id="status"></div>
+
+<div class="table">
+
+<h3>Riwayat Pasien</h3>
+
+<table id="tabel">
+<tr>
+<th>No RM</th>
+<th>Nama</th>
+<th>Tanggal</th>
+<th>Copy Prompt</th>
+</tr>
+</table>
+
+</div>
 
 </div>
 
 <script>
 
-function buatPrompt(){
+function generateRM(){
+return "RM-"+Date.now();
+}
 
-var tanggal=document.getElementById("tanggal").value;
-var nama=document.getElementById("nama").value;
+document.getElementById("rm").value=generateRM();
+
+document.getElementById("tanggal").value=new Date().toISOString().split('T')[0];
+
+loadData();
+
+function proses(){
+
+var rm=document.getElementById("rm").value;
+var tanggal=document.getElementById("tanggal_kunjungan").value;
+var nama=document.getElementById("nama_pasien").value;
 var umur=document.getElementById("umur").value;
-var jk=document.getElementById("jk").value;
+var jk=document.getElementById("jenis_kelamin").value;
 var agama=document.getElementById("agama").value;
-var keluhan=document.getElementById("keluhan").value;
-var durasi=document.getElementById("durasi").value;
-var riwayat=document.getElementById("riwayat").value;
-var terapi=document.getElementById("terapi").value;
-var diagnosa=document.getElementById("diagnosa").value;
+var keluhan=document.getElementById("keluhan_utama").value;
+var durasi=document.getElementById("durasi_keluhan").value;
+var riwayat=document.getElementById("riwayat_penyakit").value;
+var terapi=document.getElementById("metode_terapi").value;
+var diagnosa=document.getElementById("diagnosa_terapis").value;
 
-var prompt = `
-Bertindaklah sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran modern, rehabilitasi medis, nutrisi klinis, kesehatan saraf, kesehatan otot dan sendi, kesehatan metabolisme, kesehatan pencernaan, serta terapi komplementer.
+var prompt=`
+Anda bertindak sebagai tim dokter spesialis multidisiplin yang memiliki pengetahuan luas dari seluruh cabang ilmu kedokteran modern, kesehatan preventif, rehabilitasi medis, nutrisi klinis, kesehatan saraf, kesehatan otot dan sendi, metabolisme tubuh, kesehatan pencernaan, kesehatan mental, serta berbagai pendekatan terapi komplementer dan kesehatan holistik.
 
-Analisis data pasien berikut secara profesional.
+Anda mampu menganalisis kondisi pasien secara menyeluruh dan memberikan rekomendasi terapi, pola hidup sehat, serta program pemulihan kesehatan.
+
+Analisislah data pasien berikut secara objektif, profesional, dan komprehensif.
 
 DATA PASIEN
 
-Tanggal Kunjungan : ${tanggal}
-Nama Pasien : ${nama}
-Umur : ${umur}
-Jenis Kelamin : ${jk}
-Agama : ${agama}
+Tanggal Kunjungan : {{tanggal_kunjungan}}
+Nama Pasien : {{nama_pasien}}
+Umur : {{umur}}
+Jenis Kelamin : {{jenis_kelamin}}
+Agama : {{agama}}
 
 RIWAYAT MEDIS
 
-Keluhan Utama : ${keluhan}
-Durasi Keluhan : ${durasi}
-Riwayat Penyakit atau Operasi : ${riwayat}
+Keluhan Utama : {{keluhan_utama}}
+Durasi Keluhan : {{durasi_keluhan}}
+Riwayat Penyakit atau Operasi : {{riwayat_penyakit}}
 
 TERAPI YANG DILAKUKAN
 
-Metode Terapi : ${terapi}
+Metode Terapi :
+{{metode_terapi}}
 
 CATATAN DIAGNOSA TERAPIS
 
-${diagnosa}
+{{diagnosa_terapis}}
 
 TUGAS ANDA
 
-Buatkan laporan kesehatan pasien yang sangat lengkap dengan struktur berikut:
+Berdasarkan data tersebut, buatkan laporan kesehatan pasien secara lengkap dengan struktur berikut.
 
-1 Ringkasan kondisi pasien
+1. RINGKASAN KONDISI PASIEN
+Tuliskan ringkasan kondisi pasien secara singkat dan jelas.
 
-2 Analisis kondisi kesehatan
+2. ANALISIS KONDISI KESEHATAN
+Jelaskan kemungkinan penyebab keluhan pasien dari berbagai sudut pandang medis.
 
-3 Sistem tubuh yang mungkin terlibat
+3. SISTEM TUBUH YANG TERLIBAT
+Jelaskan sistem tubuh yang kemungkinan terlibat seperti:
+sistem saraf
+sistem otot dan sendi
+sistem pencernaan
+sistem metabolisme
+sistem hormon
+sistem kardiovaskular
+atau sistem tubuh lainnya.
 
-4 Faktor risiko kesehatan
+4. FAKTOR RISIKO
+Jelaskan faktor yang dapat memperburuk kondisi pasien seperti:
+pola makan
+kurang aktivitas
+stres
+kurang tidur
+postur tubuh buruk
+kebiasaan harian
 
-5 Hubungan dengan diagnosa terapis
+5. HUBUNGAN DENGAN DIAGNOSA TERAPIS
+Jelaskan hubungan antara keluhan pasien dan diagnosa yang diberikan oleh terapis.
 
-6 Penjelasan kondisi untuk pasien
+6. PENJELASAN KONDISI UNTUK PASIEN
+Berikan penjelasan sederhana agar pasien memahami kondisi tubuhnya.
 
-7 Rekomendasi makanan yang dianjurkan
+7. REKOMENDASI MAKANAN
+Buat daftar makanan yang dianjurkan untuk membantu pemulihan pasien.
 
-8 Makanan yang perlu dihindari
+8. MAKANAN YANG PERLU DIHINDARI
+Buat daftar makanan yang dapat memperburuk kondisi pasien.
 
-9 Rekomendasi herbal alami
+9. REKOMENDASI HERBAL ALAMI
+Jika relevan, berikan rekomendasi herbal alami yang aman seperti:
+madu
+jahe
+kunyit
+habbatussauda
+atau herbal lainnya.
 
-10 Rekomendasi olahraga dan terapi fisik
+10. SARAN OLAHRAGA DAN TERAPI FISIK
+Berikan rekomendasi aktivitas fisik yang aman seperti:
+peregangan
+jalan kaki
+latihan ringan
+latihan postur tubuh
 
-11 Rekomendasi terapi lanjutan
+11. REKOMENDASI TERAPI
+Jelaskan bagaimana metode terapi yang dilakukan dapat membantu pemulihan pasien.
 
-12 Hal yang perlu dipantau
+12. HAL YANG PERLU DIPANTAU
+Sebutkan gejala yang perlu diperhatikan oleh pasien.
 
-13 Pesan edukatif untuk pasien
-
-FORMAT OUTPUT
-
-Buat laporan dalam format PDF dengan header berikut:
-
-Terapi Islami
-Ikhtiar Terapi, Kesembuhan dari Allah SWT
-Official Website: www.terapiislami.com
-WhatsApp: 085276-456789
-
-Logo:
-https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfzvRuv2EmBUdExyNh6-bzYM2cpsiB2SAbkawzsyMXrxbuLcPF6Fi0WGN7W9rMDn-T_vAfiTpLHW6OwyqpC3HB7izcFHpRQIDf_YLzzsvtEz2kUBxgMde2Pm5zBYGrVcqAnS1gIFMCrePzUUhtEDznNgq7HfHlef9jDywF8payqZxqppecXPKj57MWNxO6/s1024/1000159180.png
-
-Di bagian footer juga tampilkan:
-
-Terapis
-Abu Khoir, S.Pd., M.Kom.
-
-QR Code:
-https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFisc4nbYWXnxmsOy3HkTD6R9CHTEuXfUOLJf3MzT9jvdSnhNJYvtSp8T8M444CN0LYyu4pjd7GWSxUUBYmR6oB4wxmKTo17QwbBj69xuVU1eTBqQN5thSqFSo7AYUyLkGbPA9zYYWj0q6Wk78cXXGVSRqaaYQWzCqIMrP-Dj7a3-84AtyvAkSIT-9NF70/s1147/1000159312.png
-
-Tambahkan disclaimer berikut di bagian bawah laporan:
-
-Catatan:
-Ini adalah bantuan berpikir berbasis AI, bukan diagnosis pasti.
-Gunakan informasi ini hanya sebagai bahan diskusi dengan dokter Anda.
-Jika kondisi memburuk, segera cari bantuan medis profesional.
+13. PESAN EDUKATIF UNTUK PASIEN
+Tuliskan pesan motivasi kesehatan agar pasien lebih disiplin menjaga kesehatannya.
 `;
 
 navigator.clipboard.writeText(prompt);
 
-document.getElementById("status").innerHTML="✅ Prompt berhasil dicopy. Silakan paste ke ChatGPT.";
+document.getElementById("status").innerHTML="Prompt berhasil dicopy.";
+
+var data=JSON.parse(localStorage.getItem("pasien")||"[]");
+
+data.push({rm,nama,tanggal,prompt});
+
+localStorage.setItem("pasien",JSON.stringify(data));
+
+loadData();
+
+}
+
+function loadData(){
+
+var tabel=document.getElementById("tabel");
+
+var data=JSON.parse(localStorage.getItem("pasien")||"[]");
+
+tabel.innerHTML="<tr><th>No RM</th><th>Nama</th><th>Tanggal</th><th>Copy Prompt</th></tr>";
+
+data.forEach((p,i)=>{
+
+var row=tabel.insertRow();
+
+row.insertCell(0).innerHTML=p.rm;
+row.insertCell(1).innerHTML=p.nama;
+row.insertCell(2).innerHTML=p.tanggal;
+row.insertCell(3).innerHTML="<button onclick='copyPrompt("+i+")'>Copy</button>";
+
+});
+
+}
+
+function copyPrompt(i){
+
+var data=JSON.parse(localStorage.getItem("pasien"));
+
+navigator.clipboard.writeText(data[i].prompt);
+
+alert("Prompt dicopy kembali");
 
 }
 
